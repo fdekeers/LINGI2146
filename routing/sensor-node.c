@@ -31,8 +31,14 @@ PROCESS_THREAD(sensor_node, event, data) {
 
 	while(1) {
 
-		etimer_set(&timer, CLOCK_SECOND * 4 + random_rand());
+		etimer_set(&timer, CLOCK_SECOND * 4 + random_rand() % (CLOCK_SECOND * 4));
+
+		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
+
+		printf("Test OK");
 
 	}
+
+	PROCESS_END();
 
 }
