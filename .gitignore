@@ -1,0 +1,5 @@
+test/
+mote/obj_z1
+mote/*.a
+mote/*.map
+mote/*.z1
