@@ -18,9 +18,9 @@ AUTOSTART_PROCESSES(&sensor_node);
 
 // Broadcast Rime connexion
 static struct broadcast_conn broadcast;
-static const struct broadcast_callbacks broadcast_call = {broadcast_recv};
+static const struct broadcast_callbacks broadcast_call = {};
 
-PROCESS_THREAD(sensor_node, event, data) {
+PROCESS_THREAD(sensor_node, ev, data) {
 
 	static struct etimer timer;
 	PROCESS_EXITHANDLER(broadcast_close(&broadcast);)
