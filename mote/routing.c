@@ -25,7 +25,7 @@ void send_DIS(struct broadcast_conn *conn) {
 
 	size_t size = sizeof(uint8_t);
 
-	uint8_t* data = malloc(size);
+	uint8_t* data = (uint8_t*) malloc(size);
 	*data = DIS;
 
 	packetbuf_copyfrom((void*) data, size);
@@ -35,17 +35,42 @@ void send_DIS(struct broadcast_conn *conn) {
 }
 
 /**
+ * Broadcasts a DIO message, containing the rank of the node.
+ */
+void send_DIO(struct broadcast_conn *conn, uint8_t rank) {
+
+	size_t size = sizeof(uint8_t);
+
+	uint8_t* data = (uint8_t*) malloc(size);
+	*data = DIO;
+	*(data+1) = rank;
+
+	packetbuf_copyfrom((void*) data, size*2);
+	broadcast_send(conn);
+	printf("DIO packet broadcasted, rank = %d\n", rank);
+
+}
+
+/**
  * Called when a DIS packet is received.
  */
-void receive_DIS() {
+void receive_DIS(uint8_t in_dodag, struct broadcast_conn *conn, uint8_t rank) {
 	printf("DIS packet received.\n");
+
+	// If the node is already in a DODAG, send DIO packet
+	if (in_dodag) {
+		send_DIO(conn, rank);
+	}
+
 }
 
 /**
  * Called when a DIO packet is received.
  */
-void receive_DIO() {
+void receive_DIO(parent_t* parent, uint8_t rank_recv, signed char rss) {
 	printf("DIO packet received.\n");
+
+	
 }
 
 /**
