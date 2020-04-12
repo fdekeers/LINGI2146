@@ -5,117 +5,70 @@
 #include "contiki.h"
 #include "net/rime/rime.h"
 #include "dev/leds.h"
-#include "dev/cc2420/cc2420.h"
+
+#include "routing.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include "random.h"
 
 
-//////////////////
-//  DATA TYPES  //
-//////////////////
-
-typedef struct parent_mote {
-	linkaddr_t* addr;
-	uint8_t rank;
-	signed char rss;
-} parent_t;
-
+// Represents the attributes of this mote
+mote_t mote;
+uint8_t created = 0;
 
 
 //////////////////////////
-//  VALUES & VARIABLES  //
+//  UNICAST CONNECTION  //
 //////////////////////////
 
-// Values for the different types of RPL control messages
-const uint8_t DIS = 0;
-const uint8_t DIO = 1;
-const uint8_t DAO = 2;
-
-uint8_t in_dodag = 0;
-uint8_t rank;
-parent_t parent;
-
-
-
-/////////////////
-//  FUNCTIONS  //
-/////////////////
-
 /**
- * Broadcasts a DIS message.
+ * Callback function, called when an unicast packet is received
  */
-void send_DIS(struct broadcast_conn *conn) {
+void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t seqno) {
 
-	size_t size = sizeof(uint8_t);
+	uint8_t* data = (uint8_t*) packetbuf_dataptr();
+	uint8_t type = *data;
 
-	uint8_t* data = (uint8_t*) malloc(size);
-	*data = DIS;
+	if (type == DAO) {
 
-	packetbuf_copyfrom((void*) data, size);
-	broadcast_send(conn);
-	printf("DIS packet broadcasted.\n");
+		printf("DAO message received from %d.%d\n", from->u8[0], from->u8[1]);
 
-}
+		// Address of the child, put in the DAO packet
+		linkaddr_t* child_addr = (linkaddr_t*) malloc(sizeof(uint8_t)*LINKADDR_SIZE);
+		child_addr->u8[0] = from->u8[0];
+		child_addr->u8[1] = from->u8[1];
+		mote.child_addr = child_addr;
 
-/**
- * Broadcasts a DIO message, containing the rank of the node.
- */
-void send_DIO(struct broadcast_conn *conn) {
+		printf("Child set to %d.%d\n", mote.child_addr->u8[0], mote.child_addr->u8[1]);
 
-	size_t size = sizeof(uint8_t);
+		send_DAO(conn, &mote);
 
-	uint8_t* data = (uint8_t*) malloc(size);
-	*data = DIO;
-	*(data+1) = rank;
-
-	packetbuf_copyfrom((void*) data, size*2);
-	broadcast_send(conn);
-	printf("DIO packet broadcasted, rank = %d\n", rank);
-
-}
-
-/**
- * Called when a DIS packet is received.
- */
-void receive_DIS(struct broadcast_conn *conn) {
-	printf("DIS packet received.\n");
-
-	// If the node is already in a DODAG, send DIO packet
-	if (in_dodag) {
-		send_DIO(conn);
 	}
 
 }
 
-/**
- * Selects the parent
- */
-void choose_parent(const linkaddr_t* parent_addr, uint8_t parent_rank, signed char rss) {
-	if (!in_dodag) {
-		linkaddr_copy(parent.addr, parent_addr);
-		parent.rank = parent_rank;
-		parent.rss = rss;
-		in_dodag = 1;
-		printf("Parent set : Addr = %d.%d; Rank = %d\n",
-			parent.addr->u8[0], parent.addr->u8[1], parent.rank);
-	}
-	else {
-		printf("Already has a parent !\n");
-	}
+void runicast_sent(struct runicast_conn *c, const linkaddr_t *to, uint8_t retransmissions) {
+
 }
 
-/**
- * Called when a DAO packet is received.
- */
-void receive_DAO() {
-	printf("DAO packet received.\n");
+void runicast_timeout(struct runicast_conn *c, const linkaddr_t *to, uint8_t retransmissions) {
+
 }
 
+// Reliable unicast connection
+const struct runicast_callbacks runicast_callbacks = {runicast_recv, runicast_sent, runicast_timeout};
+static struct runicast_conn runicast;
 
-// Callback function, called when a broadcast packet is received
-static void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) {
+
+////////////////////////////
+//  BROADCAST CONNECTION  //
+////////////////////////////
+
+/**
+ * Callback function, called when a broadcast packet is received
+ */
+void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) {
 
 	uint8_t* data = (uint8_t*) packetbuf_dataptr();
 	uint8_t type = *data;
@@ -123,26 +76,29 @@ static void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) 
 	signed char rss = cc2420_last_rssi - 45;
 
 	if (type == DIS) {
-		receive_DIS(conn);
+		printf("DIS packet received.\n");
+		// If the mote is already in a DODAG, send DIO packet
+		if (mote.in_dodag) {
+			send_DIO(conn, &mote);
+		}
 	} else if (type == DIO) {
 		uint8_t rank_recv = *(data+1);
-		choose_parent(from, rank_recv, rss);
-	} else if (type == DAO) {
-		receive_DAO();
+		choose_parent(&mote, from, rank_recv, rss);
+		send_DAO(&runicast, &mote);
 	} else {
 		printf("Received message type unknown.\n");
 	}
 
 }
 
+// Broadcast connection
+const struct broadcast_callbacks broadcast_call = {broadcast_recv};
+static struct broadcast_conn broadcast;
+
 
 ////////////////////
 //  MAIN PROCESS  //
 ////////////////////
-
-// Broadcast connection
-static const struct broadcast_callbacks broadcast_call = {broadcast_recv};
-static struct broadcast_conn broadcast;
 
 // Create and start the process
 PROCESS(sensor_mote, "Sensor mote");
@@ -151,7 +107,10 @@ AUTOSTART_PROCESSES(&sensor_mote);
 
 PROCESS_THREAD(sensor_mote, ev, data) {
 
-	parent.addr = (linkaddr_t*) malloc(sizeof(uint8_t)*LINKADDR_SIZE);
+	if (!created) {
+		init_mote(&mote);
+		created = 1;
+	}
 
 	static struct etimer timer;
 	PROCESS_EXITHANDLER(broadcast_close(&broadcast);)
@@ -159,6 +118,7 @@ PROCESS_THREAD(sensor_mote, ev, data) {
 	PROCESS_BEGIN();
 
 	broadcast_open(&broadcast, 129, &broadcast_call);
+	runicast_open(&runicast, 144, &runicast_callbacks);
 
 	while(1) {
 
@@ -166,7 +126,11 @@ PROCESS_THREAD(sensor_mote, ev, data) {
 
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
 
-		send_DIS(&broadcast);
+		if (!mote.in_dodag) {
+			send_DIS(&broadcast);
+		} else {
+			printf("Already in DODAG.\n");
+		}
 
 	}
 

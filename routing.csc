@@ -24,7 +24,7 @@
     <motetype>
       org.contikios.cooja.mspmote.Z1MoteType
       <identifier>z11</identifier>
-      <description>sensor</description>
+      <description>mote</description>
       <source EXPORT="discard">[CONFIG_DIR]/mote/sensor-mote.c</source>
       <commands EXPORT="discard">make sensor-mote.z1 TARGET=z1</commands>
       <firmware EXPORT="copy">[CONFIG_DIR]/mote/sensor-mote.z1</firmware>
@@ -65,8 +65,8 @@
       <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
-        <x>51.13122299732835</x>
-        <y>42.067839316994785</y>
+        <x>7.154238425843962</x>
+        <y>78.71145290053364</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
@@ -83,8 +83,8 @@
       <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
-        <x>80.88784822885479</x>
-        <y>25.657345473800376</y>
+        <x>35.33816849217616</x>
+        <y>75.51686942699293</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
@@ -110,10 +110,11 @@
     org.contikios.cooja.plugins.Visualizer
     <plugin_config>
       <moterelations>true</moterelations>
-      <skin>org.contikios.cooja.plugins.skins.UDGMVisualizerSkin</skin>
-      <skin>org.contikios.cooja.plugins.skins.TrafficVisualizerSkin</skin>
       <skin>org.contikios.cooja.plugins.skins.IDVisualizerSkin</skin>
-      <viewport>5.2333647218261605 0.0 0.0 5.2333647218261605 -92.95197498168099 -39.715296431652526</viewport>
+      <skin>org.contikios.cooja.plugins.skins.AddressVisualizerSkin</skin>
+      <skin>org.contikios.cooja.plugins.skins.TrafficVisualizerSkin</skin>
+      <skin>org.contikios.cooja.plugins.skins.UDGMVisualizerSkin</skin>
+      <viewport>4.319031179852555 0.0 0.0 4.319031179852555 69.73698480704437 -148.55846647446867</viewport>
     </plugin_config>
     <width>400</width>
     <z>1</z>
@@ -128,11 +129,11 @@
       <formatted_time />
       <coloring />
     </plugin_config>
-    <width>400</width>
+    <width>448</width>
     <z>2</z>
     <height>240</height>
-    <location_x>400</location_x>
-    <location_y>160</location_y>
+    <location_x>346</location_x>
+    <location_y>159</location_y>
   </plugin>
   <plugin>
     org.contikios.cooja.plugins.TimeLine

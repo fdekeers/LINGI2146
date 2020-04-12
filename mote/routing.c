@@ -4,6 +4,7 @@
 
 #include "routing.h"
 
+
 //////////////////
 //  DATA TYPES  //
 //////////////////
@@ -14,9 +15,63 @@ const uint8_t DIO = 1;
 const uint8_t DAO = 2;
 
 
+
 /////////////////
 //  FUNCTIONS  //
 /////////////////
+
+/**
+ * Initializes the attributes of a mote.
+ */
+void init_mote(mote_t *mote) {
+
+	// Set the Rime address
+	mote->addr = (linkaddr_t*) malloc(sizeof(uint8_t)*LINKADDR_SIZE);
+	linkaddr_copy(mote->addr, &linkaddr_node_addr);
+
+	mote->in_dodag = 0;
+	mote->rank = 0;
+
+}
+
+/**
+ * Initializes the attributes of a root mote.
+ */
+void init_root(mote_t *mote) {
+
+	// Set the Rime address
+	mote->addr = (linkaddr_t*) malloc(sizeof(uint8_t)*LINKADDR_SIZE);
+	linkaddr_copy(mote->addr, &linkaddr_node_addr);
+
+	mote->in_dodag = 1;
+	mote->rank = 0;
+}
+
+/**
+ * Initializes the parent of a mote.
+ */
+void init_parent(mote_t *mote, const linkaddr_t *parent_addr, uint8_t parent_rank) {
+
+	// Set the Rime address
+	mote->parent = (mote_t*) malloc(sizeof(mote_t));
+	mote->parent->addr = (linkaddr_t*) malloc(sizeof(uint8_t)*LINKADDR_SIZE);
+	linkaddr_copy(mote->parent->addr, parent_addr);
+
+	mote->parent->in_dodag = 1;
+	mote->parent->rank = parent_rank;
+
+	// Update the attributes of the mote
+	mote->in_dodag = 1;
+	mote->rank = parent_rank + 1;
+
+}
+
+/**
+ * Adds a child to this mote
+ */
+void add_child(mote_t *mote, const linkaddr_t *child_addr, uint8_t child_rank) {
+
+}
 
 /**
  * Broadcasts a DIS message.
@@ -37,9 +92,10 @@ void send_DIS(struct broadcast_conn *conn) {
 /**
  * Broadcasts a DIO message, containing the rank of the node.
  */
-void send_DIO(struct broadcast_conn *conn, uint8_t rank) {
+void send_DIO(struct broadcast_conn *conn, mote_t *mote) {
 
 	size_t size = sizeof(uint8_t);
+	uint8_t rank = mote->rank;
 
 	uint8_t* data = (uint8_t*) malloc(size);
 	*data = DIO;
@@ -52,30 +108,41 @@ void send_DIO(struct broadcast_conn *conn, uint8_t rank) {
 }
 
 /**
- * Called when a DIS packet is received.
+ * Sends a DAO message to the parent of this node.
  */
-void receive_DIS(uint8_t in_dodag, struct broadcast_conn *conn, uint8_t rank) {
-	printf("DIS packet received.\n");
+void send_DAO(struct runicast_conn *conn, mote_t *mote) {
 
-	// If the node is already in a DODAG, send DIO packet
-	if (in_dodag) {
-		send_DIO(conn, rank);
+	if (mote->parent == NULL) {
+		printf("This mote is a root.\n");
+	} else {
+		size_t size = sizeof(uint8_t);
+		uint8_t* data = (uint8_t*) malloc(size);
+		*data = DAO;
+		packetbuf_copyfrom(data, size);
+		runicast_send(conn, mote->parent->addr, 4);
+		printf("DAO packet send to parent at addr %d.%d\n",
+			mote->parent->addr->u8[0], mote->parent->addr->u8[1]);
 	}
 
 }
 
 /**
- * Called when a DIO packet is received.
+ * Selects the parent
  */
-void receive_DIO(parent_t* parent, uint8_t rank_recv, signed char rss) {
-	printf("DIO packet received.\n");
-
-	
+void choose_parent(mote_t *mote, const linkaddr_t* parent_addr, uint8_t parent_rank, signed char rss) {
+	if (!mote->in_dodag) {
+		init_parent(mote, parent_addr, parent_rank);
+		printf("Parent set : Addr = %d.%d; Rank = %d\n",
+			parent_addr->u8[0], parent_addr->u8[1], parent_rank);
+	}
+	else {
+		printf("Already has a parent !\n");
+	}
 }
 
 /**
  * Called when a DAO packet is received.
  */
-void receive_DAO() {
+void receive_DAO(struct runicast_conn *conn) {
 	printf("DAO packet received.\n");
 }
