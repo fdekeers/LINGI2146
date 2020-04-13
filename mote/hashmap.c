@@ -105,7 +105,7 @@ int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value){
 	int index;
 
 	/* Find a place to put our value */
-	index = key % m->table_size;
+	index = hashmap_hash(m, key);
 	while(index == MAP_FULL){
 		if (hashmap_rehash(m) == MAP_OMEM) {
 			return MAP_OMEM;
@@ -136,7 +136,7 @@ int hashmap_get_int(hashmap_map *m, uint16_t key, linkaddr_t *arg){
 	int i;
 
 	/* Find data location */
-	curr = key % m->table_size;
+	curr = hashmap_hash(m, key);
 
 	/* Linear probing, if necessary */
 	for(i = 0; i<MAX_CHAIN_LENGTH; i++){
@@ -173,7 +173,7 @@ int hashmap_remove_int(hashmap_map *m, uint16_t key){
 	int curr;
 
 	/* Find key */
-	curr = key % m->table_size;
+	curr = hashmap_hash(m, key);
 
 	/* Linear probing, if necessary */
 	for(i = 0; i<MAX_CHAIN_LENGTH; i++){
