@@ -18,9 +18,9 @@ mote_t mote;
 uint8_t created = 0;
 
 
-//////////////////////////
-//  UNICAST CONNECTION  //
-//////////////////////////
+////////////////////////////
+///  UNICAST CONNECTION  ///
+////////////////////////////
 
 /**
  * Callback function, called when an unicast packet is received
@@ -61,9 +61,9 @@ const struct runicast_callbacks runicast_callbacks = {runicast_recv, runicast_se
 static struct runicast_conn runicast;
 
 
-////////////////////////////
-//  BROADCAST CONNECTION  //
-////////////////////////////
+//////////////////////////////
+///  BROADCAST CONNECTION  ///
+//////////////////////////////
 
 /**
  * Callback function, called when a broadcast packet is received
@@ -73,6 +73,7 @@ void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) {
 	uint8_t* data = (uint8_t*) packetbuf_dataptr();
 	uint8_t type = *data;
 
+	// Strength of the last received packet
 	signed char rss = cc2420_last_rssi - 45;
 
 	if (type == DIS) {
@@ -83,8 +84,8 @@ void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) {
 		}
 	} else if (type == DIO) {
 		uint8_t rank_recv = *(data+1);
-		choose_parent(&mote, from, rank_recv, rss);
-		send_DAO(&runicast, &mote);
+		if (choose_parent(&mote, from, rank_recv, rss))
+		    send_DAO(&runicast, &mote);
 	} else {
 		printf("Received message type unknown.\n");
 	}
@@ -96,9 +97,9 @@ const struct broadcast_callbacks broadcast_call = {broadcast_recv};
 static struct broadcast_conn broadcast;
 
 
-////////////////////
-//  MAIN PROCESS  //
-////////////////////
+//////////////////////
+///  MAIN PROCESS  ///
+//////////////////////
 
 // Create and start the process
 PROCESS(sensor_mote, "Sensor mote");
