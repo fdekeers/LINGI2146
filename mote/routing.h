@@ -12,29 +12,45 @@
 #include "random.h"
 
 
+///////////////////
+///  CONSTANTS  ///
+///////////////////
 
-//////////////////
-//  DATA TYPES  //
-//////////////////
+// Threshold to change parent
+#define RSS_THRESHOLD 3
 
 // Values for the different types of RPL control messages
 const uint8_t DIS;
 const uint8_t DIO;
 const uint8_t DAO;
 
+
+
+////////////////////
+///  DATA TYPES  ///
+////////////////////
+
+// Represents the attributes of a mote
 typedef struct mote {
 	linkaddr_t* addr;
 	uint8_t in_dodag;
 	uint8_t rank;
 	struct mote* parent;
+	signed char parent_rss;
 	linkaddr_t* child_addr;
 } mote_t;
 
+// Represents an entry in the routing table of a node
+typedef struct routing_table_entry {
+	linkaddr_t* dst_addr;
+	linkaddr_t* next_hop;
+} rt_entry_t;
 
 
-/////////////////
-//  FUNCTIONS  //
-/////////////////
+
+///////////////////
+///  FUNCTIONS  ///
+///////////////////
 
 /**
  * Initializes the attributes of a mote.
@@ -49,7 +65,7 @@ void init_root(mote_t *mote);
 /**
  * Initializes the parent of a mote.
  */
-void init_parent(mote_t *mote, const linkaddr_t *parent_addr, uint8_t parent_rank);
+void init_parent(mote_t *mote, const linkaddr_t *parent_addr, uint8_t parent_rank, signed char rss);
 
 /**
  * Adds a child to this mote
@@ -67,9 +83,9 @@ void send_DIS(struct broadcast_conn *conn);
 void send_DIO(struct broadcast_conn *conn, mote_t *mote);
 
 /**
- * Selects the parent
+ * Selects the parent, if it has a better rss.
  */
-void choose_parent(mote_t *mote, const linkaddr_t* parent_addr, uint8_t parent_rank, signed char rss);
+uint8_t choose_parent(mote_t *mote, const linkaddr_t* parent_addr, uint8_t parent_rank, signed char rss);
 
 /**
  * Sends a DAO message to the parent of this node.

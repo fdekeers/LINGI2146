@@ -1,5 +1,5 @@
 CONTIKI_PROJECT = sensor-mote root-mote
-PROJECT_SOURCEFILES = routing.c
+PROJECT_SOURCEFILES = routing.c hashmap.c
 
 all: $(CONTIKI_PROJECT)
 

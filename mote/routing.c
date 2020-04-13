@@ -5,9 +5,9 @@
 #include "routing.h"
 
 
-//////////////////
-//  DATA TYPES  //
-//////////////////
+///////////////////
+///  CONSTANTS  ///
+///////////////////
 
 // Values for the different types of RPL control messages
 const uint8_t DIS = 0;
@@ -16,9 +16,9 @@ const uint8_t DAO = 2;
 
 
 
-/////////////////
-//  FUNCTIONS  //
-/////////////////
+///////////////////
+///  FUNCTIONS  ///
+///////////////////
 
 /**
  * Initializes the attributes of a mote.
@@ -50,7 +50,7 @@ void init_root(mote_t *mote) {
 /**
  * Initializes the parent of a mote.
  */
-void init_parent(mote_t *mote, const linkaddr_t *parent_addr, uint8_t parent_rank) {
+void init_parent(mote_t *mote, const linkaddr_t *parent_addr, uint8_t parent_rank, signed char rss) {
 
 	// Set the Rime address
 	mote->parent = (mote_t*) malloc(sizeof(mote_t));
@@ -59,6 +59,7 @@ void init_parent(mote_t *mote, const linkaddr_t *parent_addr, uint8_t parent_ran
 
 	mote->parent->in_dodag = 1;
 	mote->parent->rank = parent_rank;
+	mote->parent_rss = rss;
 
 	// Update the attributes of the mote
 	mote->in_dodag = 1;
@@ -127,16 +128,18 @@ void send_DAO(struct runicast_conn *conn, mote_t *mote) {
 }
 
 /**
- * Selects the parent
+ * Selects the parent. Returns 1 if the parent has changed.
  */
-void choose_parent(mote_t *mote, const linkaddr_t* parent_addr, uint8_t parent_rank, signed char rss) {
-	if (!mote->in_dodag) {
-		init_parent(mote, parent_addr, parent_rank);
+uint8_t choose_parent(mote_t *mote, const linkaddr_t* parent_addr, uint8_t parent_rank, signed char rss) {
+	if (!mote->in_dodag || rss > mote->parent_rss + RSS_THRESHOLD) {
+		init_parent(mote, parent_addr, parent_rank, rss);
 		printf("Parent set : Addr = %d.%d; Rank = %d\n",
 			parent_addr->u8[0], parent_addr->u8[1], parent_rank);
+		return 1;
 	}
 	else {
-		printf("Already has a parent !\n");
+		printf("Already has a better parent !\n");
+		return 0;
 	}
 }
 
