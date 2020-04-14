@@ -1,8 +1,3 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
-#include "contiki.h"
 /*
  * Adaptation by : Alexandre Gobeaux, François De Keersmaeker, Nicolas van de Walle
  * 
@@ -16,6 +11,13 @@
  * Modified by Pete Warden to fix a serious performance problem, support strings as keys
  * and removed thread synchronization - http://petewarden.typepad.com
  */
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+#include "contiki.h"
+#include "net/rime/rime.h"
 
 #define MAP_MISSING -3  /* No such element */
 #define MAP_FULL -2 	/* Hashmap is full */

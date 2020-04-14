@@ -18,9 +18,9 @@ mote_t mote;
 uint8_t created = 0;
 
 
-//////////////////////////
-//  UNICAST CONNECTION  //
-//////////////////////////
+////////////////////////////
+///  UNICAST CONNECTION  ///
+////////////////////////////
 
 /**
  * Callback function, called when an unicast packet is received
@@ -34,15 +34,21 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 
 		printf("DAO message received from %d.%d\n", from->u8[0], from->u8[1]);
 
-		// Address of the child, put in the DAO packet
-		linkaddr_t* child_addr = (linkaddr_t*) malloc(sizeof(uint8_t)*LINKADDR_SIZE);
-		child_addr->u8[0] = from->u8[0];
-		child_addr->u8[1] = from->u8[1];
-		mote.child_addr = child_addr;
+		// Address of the mote that sent the DAO packet
+		linkaddr_t child_addr;
+		child_addr.u8[0] = *(data+1);
+		child_addr.u8[1] = *(data+2);
 
-		printf("Child set to %d.%d\n", mote.child_addr->u8[0], mote.child_addr->u8[1]);
-
-		send_DAO(conn, &mote);
+		if (hashmap_put(mote.routing_table, child_addr, *from) == MAP_OK) {
+			linkaddr_t *next_hop = (linkaddr_t*) malloc(sizeof(linkaddr_t));
+			hashmap_get(mote.routing_table, child_addr, next_hop); 
+			printf("Added child %d.%d. Reachable from %d.%d.\n",
+				child_addr.u8[0], child_addr.u8[1],
+				next_hop->u8[0], next_hop->u8[1]);
+			forward_DAO(conn, &mote, child_addr);
+		} else {
+			printf("Error adding to routing table\n");
+		}
 
 	}
 
@@ -62,9 +68,9 @@ const struct runicast_callbacks runicast_callbacks = {runicast_recv, runicast_se
 static struct runicast_conn runicast;
 
 
-////////////////////////////
-//  BROADCAST CONNECTION  //
-////////////////////////////
+//////////////////////////////
+///  BROADCAST CONNECTION  ///
+//////////////////////////////
 
 /**
  * Callback function, called when a broadcast packet is received
@@ -93,9 +99,9 @@ const struct broadcast_callbacks broadcast_call = {broadcast_recv};
 static struct broadcast_conn broadcast;
 
 
-////////////////////
-//  MAIN PROCESS  //
-////////////////////
+//////////////////////
+///  MAIN PROCESS  ///
+//////////////////////
 
 // Create and start the process
 PROCESS(root_mote, "Root mote");

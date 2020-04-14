@@ -29,6 +29,9 @@ void init_mote(mote_t *mote) {
 	mote->addr = (linkaddr_t*) malloc(sizeof(uint8_t)*LINKADDR_SIZE);
 	linkaddr_copy(mote->addr, &linkaddr_node_addr);
 
+	// Initialize routing table
+	mote->routing_table = hashmap_new();
+
 	mote->in_dodag = 0;
 	mote->rank = 0;
 
@@ -42,6 +45,9 @@ void init_root(mote_t *mote) {
 	// Set the Rime address
 	mote->addr = (linkaddr_t*) malloc(sizeof(uint8_t)*LINKADDR_SIZE);
 	linkaddr_copy(mote->addr, &linkaddr_node_addr);
+
+	// Initialize routing table
+	mote->routing_table = hashmap_new();
 
 	mote->in_dodag = 1;
 	mote->rank = 0;
@@ -95,14 +101,14 @@ void send_DIS(struct broadcast_conn *conn) {
  */
 void send_DIO(struct broadcast_conn *conn, mote_t *mote) {
 
-	size_t size = sizeof(uint8_t);
+	size_t size = sizeof(uint8_t)*2;
 	uint8_t rank = mote->rank;
 
 	uint8_t* data = (uint8_t*) malloc(size);
 	*data = DIO;
 	*(data+1) = rank;
 
-	packetbuf_copyfrom((void*) data, size*2);
+	packetbuf_copyfrom((void*) data, size);
 	broadcast_send(conn);
 	printf("DIO packet broadcasted, rank = %d\n", rank);
 
@@ -114,13 +120,38 @@ void send_DIO(struct broadcast_conn *conn, mote_t *mote) {
 void send_DAO(struct runicast_conn *conn, mote_t *mote) {
 
 	if (mote->parent == NULL) {
-		printf("This mote is a root.\n");
+		printf("Root mote. DAO not forwarded.\n");
 	} else {
-		size_t size = sizeof(uint8_t);
+		size_t size = sizeof(uint8_t)*3;
 		uint8_t* data = (uint8_t*) malloc(size);
 		*data = DAO;
+		*(data+1) = mote->addr->u8[0];
+		*(data+2) = mote->addr->u8[1];
 		packetbuf_copyfrom(data, size);
-		runicast_send(conn, mote->parent->addr, 4);
+		runicast_send(conn, mote->parent->addr, MAX_RETRANSMISSIONS);
+		free(data);
+		printf("DAO packet send to parent at addr %d.%d\n",
+			mote->parent->addr->u8[0], mote->parent->addr->u8[1]);
+	}
+
+}
+
+/**
+ * Forwards a DAO message, with source address child_addr, to the parent of this node.
+ */
+void forward_DAO(struct runicast_conn *conn, mote_t *mote, linkaddr_t child_addr) {
+
+	if (mote->parent == NULL) {
+		printf("Root mote. DAO not forwarded.\n");
+	} else {
+		size_t size = sizeof(uint8_t)*3;
+		uint8_t* data = (uint8_t*) malloc(size);
+		*data = DAO;
+		*(data+1) = child_addr.u8[0];
+		*(data+2) = child_addr.u8[1];
+		packetbuf_copyfrom(data, size);
+		runicast_send(conn, mote->parent->addr, MAX_RETRANSMISSIONS);
+		free(data);
 		printf("DAO packet send to parent at addr %d.%d\n",
 			mote->parent->addr->u8[0], mote->parent->addr->u8[1]);
 	}

@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include "random.h"
 
+#include "hashmap.h"
+
 
 ///////////////////
 ///  CONSTANTS  ///
@@ -18,6 +20,9 @@
 
 // Threshold to change parent
 #define RSS_THRESHOLD 3
+
+// Maximum number of retransmissions for reliable unicast transport
+#define MAX_RETRANSMISSIONS 4
 
 // Values for the different types of RPL control messages
 const uint8_t DIS;
@@ -37,14 +42,8 @@ typedef struct mote {
 	uint8_t rank;
 	struct mote* parent;
 	signed char parent_rss;
-	linkaddr_t* child_addr;
+	hashmap_map* routing_table;
 } mote_t;
-
-// Represents an entry in the routing table of a node
-typedef struct routing_table_entry {
-	linkaddr_t* dst_addr;
-	linkaddr_t* next_hop;
-} rt_entry_t;
 
 
 
@@ -91,6 +90,11 @@ uint8_t choose_parent(mote_t *mote, const linkaddr_t* parent_addr, uint8_t paren
  * Sends a DAO message to the parent of this node.
  */
 void send_DAO(struct runicast_conn *conn, mote_t *mote);
+
+/**
+ * Forwards the DAO message, with source address child_addr, to the parent of this node.
+ */
+void forward_DAO(struct runicast_conn *conn, mote_t *mote, linkaddr_t child_addr);
 
 /**
  * Called when a DAO packet is received.
