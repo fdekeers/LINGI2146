@@ -1,0 +1,52 @@
+Se connecter au dossier de la VM en SSH :
+sshfs user@192.168.1.31:/home/user /home/framinem/InstantContiki/
+
+On peut utiliser les Rime modules suivants (contiki/core/net/rime) :
+- unicast.h
+- runicast.h (reliable unicast)
+- broadcast.h
+
+Comment récupérer les données des sensors ?
+	Les sensors envoient spontanément les données au serveur. MIEUX
+
+Qu'est-ce qu'il se passe si un node reçoit un message "OPEN" alors que la valve est déjà ouverte ?
+1. Le timer recommence à chaque fois que le node reçoit un message "OPEN"
+2. Le message est ignoré.
+On peut choisir. On choisit le premier.
+
+A partir de combien de données calcule-t-on les least squares, et dit-on au node d'OPEN ?
+	On peut décider d'attendre d'avoir suffisamment de données.
+
+Lorsqu'un computation node récupère le calcul d'un sensor, est-ce qu'il doit notifier les nodes plus haut, éventuellement les computation nodes qui s'occupaient du calcul avant, pour qu'ils nous refilent les dernières données, où est-ce qu'on repart de 0 ?
+	On repart de 0. (plus simple)
+
+Un nouveau sensor mote choisit son parent en fonction de la qualité du signal. Cependant, après qu'il l'ai choisi, il n'en change plus. Quel timing doit-on laisser au mote pour choisir son parent ?
+
+Lorsqu'un node reçoit un message d'un parent potentiel, même s'il a déjà un parent, il switche quand même de parent si le signal est bien meilleur.
+	-> Pas besoin de timer.
+
+Si le serveur envoie le message d'ouverture de la valve à un node, et que ce node change de parent à ce moment-là, le message va se perdre. On s'en fout, parce que le node va quand même renvoyer ses données 30sec plus tard.
+
+
+BORDER ROUTER
+- Crée le DODAG et se place en racine
+- Envoie les DIO messages en broadcast
+
+
+OTHER NODES
+- Envoie un DIS message en arrivant, en broadcast
+- Reçoit les DIO messages environnants
+- Choisit un (un seul !) parent, en fonction de la qualité de la transmission
+- Envoie un DAO message à ce parent, pour lui dire "Hey, je suis désormais ton enfant"
+
+
+A implémenter maintenant :
+	- Rajouter un timestamp dans les messages, qui sera vérifié par les nodes qui reçoivent les messages
+	- Messages DIO périodiques en broadcast
+	- Mettre à jour le RSS du parent à chaque DIO reçu
+	- Messages DAO périodiques en unicast, uniquement au parent (pour garder la routing table à jour)
+	- Rajouter timestamp dans la hashmap
+	- Hashmap : in_use (boolean / uint8); size & table_size (uint16)
+	- Ajouter une priority queue, liée à la hash map pour les timestamp
+	- Messages pour retirer les nodes des tables de routage
+	/!\ Toujours regarder quel node nous envoie des informations sur un potentiel node à supprimer.

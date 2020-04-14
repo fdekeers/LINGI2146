@@ -50,6 +50,8 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 			printf("Error adding to routing table\n");
 		}
 
+	} else {
+		printf("Received unknown unicast message\n");
 	}
 
 
@@ -88,6 +90,8 @@ void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) {
 		if (mote.in_dodag) {
 			send_DIO(conn, &mote);
 		}
+	} else if (type == DIO) {
+		printf("DIO message received.\n");
 	} else {
 		printf("Received message type unknown.\n");
 	}
@@ -125,9 +129,20 @@ PROCESS_THREAD(root_mote, ev, data) {
 
 	while(1) {
 
-		etimer_set(&timer, CLOCK_SECOND*2);
+		etimer_set(&timer, CLOCK_SECOND*5);
 
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
+
+		printf("Routing table\n");
+		hashmap_element* map = mote.routing_table->data;
+		int i;
+		for (i = 0; i < mote.routing_table->table_size; i++) {
+			hashmap_element elem = *(map+i);
+			if (elem.in_use) {
+				printf("%d.%d; reachable from %d.%d\n",
+					elem.key >> 8, (elem.key << 8) >> 8, elem.data.u8[0], elem.data.u8[1]);
+			}
+		}
 
 	}
 

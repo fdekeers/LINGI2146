@@ -128,9 +128,10 @@ void send_DAO(struct runicast_conn *conn, mote_t *mote) {
 		*(data+1) = mote->addr->u8[0];
 		*(data+2) = mote->addr->u8[1];
 		packetbuf_copyfrom(data, size);
-		runicast_send(conn, mote->parent->addr, MAX_RETRANSMISSIONS);
 		free(data);
-		printf("DAO packet send to parent at addr %d.%d\n",
+
+		runicast_send(conn, mote->parent->addr, MAX_RETRANSMISSIONS);
+		printf("DAO packet sent to parent at addr %d.%d\n",
 			mote->parent->addr->u8[0], mote->parent->addr->u8[1]);
 	}
 
@@ -144,15 +145,17 @@ void forward_DAO(struct runicast_conn *conn, mote_t *mote, linkaddr_t child_addr
 	if (mote->parent == NULL) {
 		printf("Root mote. DAO not forwarded.\n");
 	} else {
+		printf("Child address forwarded : %d.%d\n", child_addr.u8[0], child_addr.u8[1]);
 		size_t size = sizeof(uint8_t)*3;
 		uint8_t* data = (uint8_t*) malloc(size);
 		*data = DAO;
 		*(data+1) = child_addr.u8[0];
 		*(data+2) = child_addr.u8[1];
 		packetbuf_copyfrom(data, size);
-		runicast_send(conn, mote->parent->addr, MAX_RETRANSMISSIONS);
 		free(data);
-		printf("DAO packet send to parent at addr %d.%d\n",
+		
+		runicast_send(conn, mote->parent->addr, MAX_RETRANSMISSIONS);
+		printf("DAO packet forwarded to parent at addr %d.%d\n",
 			mote->parent->addr->u8[0], mote->parent->addr->u8[1]);
 	}
 
@@ -162,7 +165,7 @@ void forward_DAO(struct runicast_conn *conn, mote_t *mote, linkaddr_t child_addr
  * Selects the parent. Returns 1 if the parent has changed.
  */
 uint8_t choose_parent(mote_t *mote, const linkaddr_t* parent_addr, uint8_t parent_rank, signed char rss) {
-	if (!mote->in_dodag || rss > mote->parent_rss + RSS_THRESHOLD) {
+	if (!mote->in_dodag || (rss > mote->parent_rss + RSS_THRESHOLD && mote->rank >= parent_rank)) {
 		init_parent(mote, parent_addr, parent_rank, rss);
 		printf("Parent set : Addr = %d.%d; Rank = %d\n",
 			parent_addr->u8[0], parent_addr->u8[1], parent_rank);

@@ -39,6 +39,8 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 		child_addr.u8[0] = *(data+1);
 		child_addr.u8[1] = *(data+2);
 
+		printf("Child address : %d.%d\n", child_addr.u8[0], child_addr.u8[1]);
+
 		if (hashmap_put(mote.routing_table, child_addr, *from) == MAP_OK) {
 			linkaddr_t *next_hop = (linkaddr_t*) malloc(sizeof(linkaddr_t));
 			hashmap_get(mote.routing_table, child_addr, next_hop); 
@@ -50,16 +52,24 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 			printf("Error adding to routing table\n");
 		}
 
+	} else {
+		printf("Received unknown unicast message\n");
 	}
 
 }
 
+/**
+ * Callback function, called when an unicast packet is sent
+ */
 void runicast_sent(struct runicast_conn *c, const linkaddr_t *to, uint8_t retransmissions) {
 
 }
 
+/**
+ * Callback function, called when an unicast packet has timed out
+ */
 void runicast_timeout(struct runicast_conn *c, const linkaddr_t *to, uint8_t retransmissions) {
-
+	printf("Runicast packet timed out.\n");
 }
 
 // Reliable unicast connection
@@ -83,6 +93,7 @@ void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) {
 	signed char rss = cc2420_last_rssi - 45;
 
 	if (type == DIS) {
+		
 		printf("DIS packet received.\n");
 		// If the mote is already in a DODAG, send DIO packet
 		if (mote.in_dodag) {
@@ -90,8 +101,9 @@ void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) {
 		}
 	} else if (type == DIO) {
 		uint8_t rank_recv = *(data+1);
-		if (choose_parent(&mote, from, rank_recv, rss))
+		if (choose_parent(&mote, from, rank_recv, rss)) {
 		    send_DAO(&runicast, &mote);
+		}
 	} else {
 		printf("Received message type unknown.\n");
 	}
@@ -129,7 +141,7 @@ PROCESS_THREAD(sensor_mote, ev, data) {
 
 	while(1) {
 
-		etimer_set(&timer, CLOCK_SECOND*2);
+		etimer_set(&timer, CLOCK_SECOND*2 + random_rand() % CLOCK_SECOND);
 
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
 

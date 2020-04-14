@@ -6,6 +6,7 @@
 #include "net/rime/rime.h"
 #include "dev/leds.h"
 #include "dev/cc2420/cc2420.h"
+#include "sys/etimer.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,6 +18,11 @@
 ///////////////////
 ///  CONSTANTS  ///
 ///////////////////
+
+// Constants for runicast sending functions
+#define SENT 1
+#define NOT_SENT -1
+#define NO_PARENT -2
 
 // Threshold to change parent
 #define RSS_THRESHOLD 3
