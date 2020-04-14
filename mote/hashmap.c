@@ -78,7 +78,7 @@ int hashmap_rehash(hashmap_map *m){
 
 	/* Setup the new elements */
 	hashmap_element* temp = (hashmap_element *)
-		calloc(2 * m->table_size, sizeof(hashmap_element));
+		my_calloc(2 * m->table_size, sizeof(hashmap_element));
 	if(!temp) return MAP_OMEM;
 
 	/* Update the array */
