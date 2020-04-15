@@ -133,8 +133,7 @@ PROCESS_THREAD(root_mote, ev, data) {
 
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
 
-		printf("Routing table\n");
-		hashmap_print(mote.routing_table);
+		send_DIO(&broadcast, &mote);
 
 	}
 
