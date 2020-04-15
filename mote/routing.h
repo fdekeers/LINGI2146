@@ -19,12 +19,18 @@
 ///  CONSTANTS  ///
 ///////////////////
 
+// Constants for offset (in bytes) in packets
+#define OFFSET_TYPE  0
+#define OFFSET_TIME  1
+#define OFFSET_ADDR1 2
+#define OFFSET_ADDR2 3
+
 // Constants for runicast sending functions
-#define SENT 1
-#define NOT_SENT -1
+#define SENT       1
+#define NOT_SENT  -1
 #define NO_PARENT -2
 
-// Threshold to change parent
+// Threshold to change parent (in dB)
 #define RSS_THRESHOLD 3
 
 // Maximum number of retransmissions for reliable unicast transport
