@@ -43,7 +43,7 @@ OTHER NODES
 
 
 A implémenter maintenant :
-	- Mettre à jour le RSS du parent à chaque DIO reçu
+	- Forward un DIO dès que le rang change pour informer les enfants
 	- Messages DAO périodiques en unicast, uniquement au parent (pour garder la routing table à jour)
 	- Hashmap : in_use (boolean / uint8); size & table_size (uint16)
 	- Hashmap : changer la constante de taille initiale
