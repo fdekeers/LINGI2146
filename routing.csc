@@ -65,8 +65,8 @@
       <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
-        <x>55.18735467522237</x>
-        <y>-62.41707614218669</y>
+        <x>27.434646258657892</x>
+        <y>53.330968508087196</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
@@ -83,8 +83,8 @@
       <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
-        <x>36.798118036170514</x>
-        <y>-38.44776632066561</y>
+        <x>52.193710206069554</x>
+        <y>71.652605012854</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
@@ -101,8 +101,8 @@
       <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
-        <x>94.75020205433594</x>
-        <y>-42.197123443412266</y>
+        <x>63.456594941578906</x>
+        <y>43.9767423272609</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
@@ -119,8 +119,8 @@
       <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
-        <x>5.0062445979435175</x>
-        <y>-21.361851125956274</y>
+        <x>88.40720703617072</x>
+        <y>14.359185629458871</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
@@ -133,11 +133,29 @@
       </interface_config>
       <motetype_identifier>z11</motetype_identifier>
     </mote>
+    <mote>
+      <breakpoints />
+      <interface_config>
+        org.contikios.cooja.interfaces.Position
+        <x>108.8982324425187</x>
+        <y>-4.870395019923734</y>
+        <z>0.0</z>
+      </interface_config>
+      <interface_config>
+        org.contikios.cooja.mspmote.interfaces.MspClock
+        <deviation>1.0</deviation>
+      </interface_config>
+      <interface_config>
+        org.contikios.cooja.mspmote.interfaces.MspMoteID
+        <id>5</id>
+      </interface_config>
+      <motetype_identifier>z11</motetype_identifier>
+    </mote>
   </simulation>
   <plugin>
     org.contikios.cooja.plugins.SimControl
     <width>280</width>
-    <z>0</z>
+    <z>1</z>
     <height>160</height>
     <location_x>400</location_x>
     <location_y>0</location_y>
@@ -150,10 +168,12 @@
       <skin>org.contikios.cooja.plugins.skins.AddressVisualizerSkin</skin>
       <skin>org.contikios.cooja.plugins.skins.TrafficVisualizerSkin</skin>
       <skin>org.contikios.cooja.plugins.skins.UDGMVisualizerSkin</skin>
-      <viewport>3.472041731329006 0.0 0.0 3.472041731329006 4.320727127094977 292.44196584048495</viewport>
+      <skin>org.contikios.cooja.plugins.skins.GridVisualizerSkin</skin>
+      <skin>org.contikios.cooja.plugins.skins.MoteTypeVisualizerSkin</skin>
+      <viewport>1.8386166759635656 0.0 0.0 1.8386166759635656 87.80802321419246 80.97858368406094</viewport>
     </plugin_config>
     <width>400</width>
-    <z>1</z>
+    <z>0</z>
     <height>400</height>
     <location_x>1</location_x>
     <location_y>1</location_y>
@@ -178,6 +198,7 @@
       <mote>1</mote>
       <mote>2</mote>
       <mote>3</mote>
+      <mote>4</mote>
       <showRadioRXTX />
       <showRadioHW />
       <showLEDs />

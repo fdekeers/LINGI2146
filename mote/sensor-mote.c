@@ -148,7 +148,7 @@ PROCESS_THREAD(sensor_mote, ev, data) {
 		if (!mote.in_dodag) {
 			send_DIS(&broadcast);
 		} else {
-			printf("Already in DODAG.\n");
+			printf("Already in DODAG\n");
 		}
 
 	}

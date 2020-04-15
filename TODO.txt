@@ -27,6 +27,8 @@ Lorsqu'un node reçoit un message d'un parent potentiel, même s'il a déjà un 
 
 Si le serveur envoie le message d'ouverture de la valve à un node, et que ce node change de parent à ce moment-là, le message va se perdre. On s'en fout, parce que le node va quand même renvoyer ses données 30sec plus tard.
 
+On utilise une liste des enfants directs, en plus d'une table de routage. Cette liste sert
+
 
 BORDER ROUTER
 - Crée le DODAG et se place en racine
@@ -41,12 +43,16 @@ OTHER NODES
 
 
 A implémenter maintenant :
-	- Rajouter un timestamp dans les messages, qui sera vérifié par les nodes qui reçoivent les messages
+	- Utiliser les constantes d'offset
+	- Utiliser des structures pour les messages, puis les copier avec memcpy
 	- Messages DIO périodiques en broadcast
 	- Mettre à jour le RSS du parent à chaque DIO reçu
 	- Messages DAO périodiques en unicast, uniquement au parent (pour garder la routing table à jour)
-	- Rajouter timestamp dans la hashmap
 	- Hashmap : in_use (boolean / uint8); size & table_size (uint16)
-	- Ajouter une priority queue, liée à la hash map pour les timestamp
+	- Hashmap : changer la constante de taille initiale
+	- Hashmap : lock ?
+	- Constante pour le nombre d'enfants directs
+	- Buffer de 10 (constante fixe) enfants directs de chaque node. Il nous faut les paramètres suivants : adresse, timestamp (avec clock_seconds), in_use
+	- Fonction qui va process le buffer et supprimer les enfants trop vieux
 	- Messages pour retirer les nodes des tables de routage
-	/!\ Toujours regarder quel node nous envoie des informations sur un potentiel node à supprimer.
+	/!\ Toujours regarder quel node nous envoie des informations sur un potentiel node à supprimer. Il faut que ce soit le nexthop.
