@@ -149,9 +149,9 @@ uint8_t choose_parent(mote_t *mote, const linkaddr_t* parent_addr, uint8_t paren
  * Updates the timestamp of node having addr child_addr to the given time or adds the node if it didn't exist
  * Prints an error if a node should be added but no more space is available
  */
-void update_timestamp(mote_t mote, uint16_t time, linkaddr_t child_addr);
+void update_timestamp(mote_t *mote, unsigned long time, linkaddr_t child_addr);
 
 /**
  * Removes children that did not send a message since a long time
  */
-void remove_unresponding_children(mote_t mote, uint16_t current_time);
+void remove_unresponding_children(mote_t *mote, unsigned long current_time);

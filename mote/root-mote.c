@@ -51,7 +51,8 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 				// linkaddr_cmp returns non-zero if addresses are equal
 
 				// update timestamp of the child now or add the new child
-				update_timestamp(mote.children, clock_seconds());
+				unsigned long time = clock_seconds();
+update_timestamp(&mote, time, child_addr);
 			}
 			
 			free(next_hop);

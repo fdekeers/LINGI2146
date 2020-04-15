@@ -191,15 +191,16 @@ uint8_t choose_parent(mote_t *mote, const linkaddr_t* parent_addr, uint8_t paren
  * Updates the timestamp of node having addr child_addr to the given time or adds the node if it didn't exist
  * Prints an error if a node should be added but no more space is available
  */
-void update_timestamp(mote_t mote, uint16_t time, linkaddr_t child_addr) {
+void update_timestamp(mote_t *mote, unsigned long time, linkaddr_t child_addr) {
 	child_mote_t *runner = mote->children;
-	first_free_ind = -1;
-	for (int i = 0; i < MAX_NB_CHILDREN; i++) {
+	int first_free_ind = -1;
+	int i;
+	for (i = 0; i < MAX_NB_CHILDREN; i++) {
 		if (!runner->in_use) {
-			if (first_free_ind = -1) {
+			if (first_free_ind == -1) {
 				first_free_ind = i;
 			}
-		} else if (linkaddr_cmp(&(runner->addr), runner)) {
+		} else if (linkaddr_cmp(&(runner->addr), &(runner->addr))) {
 				// linkaddr_cmp returns non-zero if equal
 			runner->timestamp = time;
 			return;
@@ -218,9 +219,10 @@ void update_timestamp(mote_t mote, uint16_t time, linkaddr_t child_addr) {
 /**
  * Removes children that did not send a message since a long time
  */
-void remove_unresponding_children(mote_t mote, uint16_t current_time) {
+void remove_unresponding_children(mote_t *mote, unsigned long current_time) {
 	child_mote_t *runner = mote->children;
-	for (int i = 0; i < MAX_NB_CHILDREN; i++) {
+	int i;
+	for (i = 0; i < MAX_NB_CHILDREN; i++) {
 		if (runner->in_use && current_time > runner->timestamp+TIMEOUT_CHILD) {
 			// time shouldn't wrap. 2^32 ~= 50 000 days ~= 136 years
 			// removing child data
