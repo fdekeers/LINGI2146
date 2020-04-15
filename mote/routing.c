@@ -20,10 +20,6 @@ const uint8_t DAO = 2;
 ///  FUNCTIONS  ///
 ///////////////////
 
-long current_time() {
-	return clock_seconds();
-}
-
 /**
  * Initializes the attributes of a mote.
  */

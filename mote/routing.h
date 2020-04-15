@@ -63,8 +63,6 @@ typedef struct mote {
 ///  FUNCTIONS  ///
 ///////////////////
 
-long current_time();
-
 /**
  * Initializes the attributes of a mote.
  */
