@@ -129,20 +129,12 @@ PROCESS_THREAD(root_mote, ev, data) {
 
 	while(1) {
 
-		etimer_set(&timer, CLOCK_SECOND*5);
+		etimer_set(&timer, CLOCK_SECOND*2 + random_rand() % CLOCK_SECOND);
 
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
 
 		printf("Routing table\n");
-		hashmap_element* map = mote.routing_table->data;
-		int i;
-		for (i = 0; i < mote.routing_table->table_size; i++) {
-			hashmap_element elem = *(map+i);
-			if (elem.in_use) {
-				printf("%d.%d; reachable from %d.%d\n",
-					elem.key >> 8, (elem.key << 8) >> 8, elem.data.u8[0], elem.data.u8[1]);
-			}
-		}
+		hashmap_print(mote.routing_table);
 
 	}
 
