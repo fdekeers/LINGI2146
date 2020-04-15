@@ -27,7 +27,7 @@ Lorsqu'un node reçoit un message d'un parent potentiel, même s'il a déjà un 
 
 Si le serveur envoie le message d'ouverture de la valve à un node, et que ce node change de parent à ce moment-là, le message va se perdre. On s'en fout, parce que le node va quand même renvoyer ses données 30sec plus tard.
 
-On utilise une liste des enfants directs, en plus d'une table de routage. Cette liste sert
+On utilise une liste des enfants directs, en plus d'une table de routage. Cette liste sert à supprimer des motes de la table de routage, sans devoir la process en entier. Cependant, cela nécessite de forward un message vers le haut à chaque fois qu'on enlève un mote.
 
 
 BORDER ROUTER
