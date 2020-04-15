@@ -43,7 +43,6 @@ OTHER NODES
 
 
 A implémenter maintenant :
-	- Changer les infos du parent contenus dans un mote
 	- Messages DIO périodiques en broadcast
 	- Mettre à jour le RSS du parent à chaque DIO reçu
 	- Messages DAO périodiques en unicast, uniquement au parent (pour garder la routing table à jour)

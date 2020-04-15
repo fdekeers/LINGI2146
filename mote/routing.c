@@ -62,12 +62,11 @@ void init_root(mote_t *mote) {
 void init_parent(mote_t *mote, const linkaddr_t *parent_addr, uint8_t parent_rank, signed char rss) {
 
 	// Set the Rime address
-	mote->parent = (mote_t*) malloc(sizeof(mote_t));
+	mote->parent = (parent_t*) malloc(sizeof(parent_t));
 	linkaddr_copy(&(mote->parent->addr), parent_addr);
 
-	mote->parent->in_dodag = 1;
 	mote->parent->rank = parent_rank;
-	mote->parent_rss = rss;
+	mote->parent->rss = rss;
 
 	// Update the attributes of the mote
 	mote->in_dodag = 1;
@@ -160,10 +159,10 @@ void forward_DAO(struct runicast_conn *conn, mote_t *mote, linkaddr_t child_addr
  * Selects the parent. Returns 1 if the parent has changed.
  */
 uint8_t choose_parent(mote_t *mote, const linkaddr_t* parent_addr, uint8_t parent_rank, signed char rss) {
-	if (!mote->in_dodag || (rss > mote->parent_rss + RSS_THRESHOLD && mote->rank >= parent_rank)) {
+	if (!mote->in_dodag || (rss > mote->parent->rss + RSS_THRESHOLD && mote->rank >= parent_rank)) {
 		init_parent(mote, parent_addr, parent_rank, rss);
 		printf("Parent set : Addr = %d.%d; Rank = %d\n",
-			parent_addr->u8[0], parent_addr->u8[1], parent_rank);
+			mote->parent->addr.u8[0], mote->parent->addr.u8[1], mote->parent->rank);
 		return 1;
 	}
 	else {

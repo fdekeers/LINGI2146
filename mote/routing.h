@@ -52,13 +52,20 @@ const size_t DAO_size;
 ///  DATA TYPES  ///
 ////////////////////
 
+// Represents the parent of a certain mote
+// We use another struct since we don't need all the information of the mote struct
+typedef struct parent_mote {
+	linkaddr_t addr;
+	uint8_t rank;
+	signed char rss;
+} parent_t;
+
 // Represents the attributes of a mote
 typedef struct mote {
 	linkaddr_t addr;
 	uint8_t in_dodag;
 	uint8_t rank;
-	struct mote* parent;
-	signed char parent_rss;
+	parent_t* parent;
 	hashmap_map* routing_table;
 } mote_t;
 

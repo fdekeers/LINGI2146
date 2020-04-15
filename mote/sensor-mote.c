@@ -43,7 +43,7 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 
 		if (hashmap_put(mote.routing_table, child_addr, *from) == MAP_OK) {
 			linkaddr_t *next_hop = (linkaddr_t*) malloc(sizeof(linkaddr_t));
-			hashmap_get(mote.routing_table, child_addr, next_hop); 
+			hashmap_get(mote.routing_table, child_addr, next_hop);
 			printf("Added child %d.%d. Reachable from %d.%d.\n",
 				child_addr.u8[0], child_addr.u8[1],
 				next_hop->u8[0], next_hop->u8[1]);
