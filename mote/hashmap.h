@@ -50,5 +50,10 @@ extern uint16_t linkaddr2uint16_t (linkaddr_t x);
 extern void hashmap_free(hashmap_map *m);
 extern int hashmap_length(hashmap_map *m);
 
+/**
+ * Prints the content of the hashmap.
+ */
+extern void hashmap_print(hashmap_map *m);
+
 #define INITIAL_SIZE (256) // initial size of hashmap
 #define MAX_CHAIN_LENGTH (8) // number of "looks after" for linear probing
