@@ -29,7 +29,7 @@ typedef struct _hashmap_element{
 	uint16_t key;
 	uint8_t in_use;
 	linkaddr_t data;
-	unsigned long time;
+	//unsigned long time;
 } hashmap_element;
 
 /* A hashmap has some maximum size and current size,
@@ -41,12 +41,12 @@ typedef struct _hashmap_map{
 } hashmap_map;
 
 extern hashmap_map * hashmap_new();
-extern int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value);
+extern int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value); //unsigned long time);
 extern int hashmap_get_int(hashmap_map *m, uint16_t key, linkaddr_t *arg);
 extern int hashmap_remove_int(hashmap_map *m, uint16_t key);
 extern int hashmap_put(hashmap_map *m, linkaddr_t key, linkaddr_t value);
 extern int hashmap_get(hashmap_map *m, linkaddr_t key, linkaddr_t *arg);
-extern int hashmap_int(hashmap_map *m, linkaddr_t key);
+extern int hashmap_remove(hashmap_map *m, linkaddr_t key);
 extern uint16_t linkaddr2uint16_t (linkaddr_t x);
 extern void hashmap_free(hashmap_map *m);
 extern int hashmap_length(hashmap_map *m);

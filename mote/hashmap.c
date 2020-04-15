@@ -97,7 +97,7 @@ int hashmap_rehash(hashmap_map *m){
         if (curr[i].in_use == 0)
             continue;
             
-		status = hashmap_put_int(m, curr[i].key, curr[i].data, curr[i].time);
+		status = hashmap_put_int(m, curr[i].key, curr[i].data); //, curr[i].time);
 		if (status != MAP_OK)
 			return status;
 	}
@@ -111,7 +111,7 @@ int hashmap_rehash(hashmap_map *m){
  * Add a pointer to the hashmap with some key
  */
 int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value){
-	unsigned long time = clock_seconds();
+	//unsigned long time = clock_seconds();
 	int index;
 
 	/* Find a place to put our value */
@@ -125,7 +125,7 @@ int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value){
 
 	/* Set the data */
 	m->data[index].data = value;
-	m->data[index].time = time;
+	//m->data[index].time = time;
 	m->data[index].key = key;
 	m->data[index].in_use = 1;
 	m->size++; 

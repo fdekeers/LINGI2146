@@ -36,6 +36,11 @@
 // Maximum number of retransmissions for reliable unicast transport
 #define MAX_RETRANSMISSIONS 4
 
+// Maximum number of children for each mote
+#define MAX_NB_CHILDREN 10
+
+// Timeout [sec] to know when to forget a child
+#define TIMEOUT_CHILD 180
 // Values for the different types of RPL control messages
 const uint8_t DIS;
 const uint8_t DIO;
@@ -60,12 +65,20 @@ typedef struct parent_mote {
 	signed char rss;
 } parent_t;
 
+// Represents the attributes of a mote child
+typedef struct child_mote {
+	linkaddr_t addr;
+	uint8_t in_use;
+	uint16_t timestamp;
+} child_mote_t;
+
 // Represents the attributes of a mote
 typedef struct mote {
 	linkaddr_t addr;
 	uint8_t in_dodag;
 	uint8_t rank;
 	parent_t* parent;
+	child_mote_t* children;
 	hashmap_map* routing_table;
 } mote_t;
 
@@ -118,11 +131,6 @@ void send_DIS(struct broadcast_conn *conn);
 void send_DIO(struct broadcast_conn *conn, mote_t *mote);
 
 /**
- * Selects the parent, if it has a better rss.
- */
-uint8_t choose_parent(mote_t *mote, const linkaddr_t* parent_addr, uint8_t parent_rank, signed char rss);
-
-/**
  * Sends a DAO message to the parent of this node.
  */
 void send_DAO(struct runicast_conn *conn, mote_t *mote);
@@ -131,3 +139,19 @@ void send_DAO(struct runicast_conn *conn, mote_t *mote);
  * Forwards the DAO message, with source address child_addr, to the parent of this node.
  */
 void forward_DAO(struct runicast_conn *conn, mote_t *mote, linkaddr_t child_addr);
+
+/**
+ * Selects the parent, if it has a better rss.
+ */
+uint8_t choose_parent(mote_t *mote, const linkaddr_t* parent_addr, uint8_t parent_rank, signed char rss);
+
+/**
+ * Updates the timestamp of node having addr child_addr to the given time or adds the node if it didn't exist
+ * Prints an error if a node should be added but no more space is available
+ */
+void update_timestamp(mote_t mote, uint16_t time, linkaddr_t child_addr);
+
+/**
+ * Removes children that did not send a message since a long time
+ */
+void remove_unresponding_children(mote_t mote, uint16_t current_time);

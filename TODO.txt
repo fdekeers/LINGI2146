@@ -47,7 +47,8 @@ A implémenter maintenant :
 	- Messages DAO périodiques en unicast, uniquement au parent (pour garder la routing table à jour)
 	- Hashmap : lock ?
 	- Constante pour le nombre d'enfants directs
-	- Buffer de 10 (constante fixe) enfants directs de chaque node. Il nous faut les paramètres suivants : adresse, timestamp (avec clock_seconds), in_use
+
 	- Fonction qui va process le buffer et supprimer les enfants trop vieux
+	- Attention, parfois il faut supprimer les enfants des enfants... ou enfants des enfants des enfants => checkup toutes les 5 min, si enfant mort pendant ce temps -> lookup all hashtable
 	- Messages pour retirer les nodes des tables de routage
 	/!\ Toujours regarder quel node nous envoie des informations sur un potentiel node à supprimer. Il faut que ce soit le nexthop.

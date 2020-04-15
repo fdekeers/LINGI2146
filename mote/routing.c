@@ -36,6 +36,14 @@ void init_mote(mote_t *mote) {
 	// Initialize routing table
 	mote->routing_table = hashmap_new();
 
+	// Initialize buffer of children
+	mote->children = malloc(MAX_NB_CHILDREN*sizeof(child_mote_t));
+
+	if (!mote->routing_table || !mote->children) {
+		printf("init_mote() of mote with address %u.%u : could not allocate enough memory\n", (mote->addr).u8[0], (mote->addr).u8[1]);
+		exit(-1);
+	}
+
 	mote->in_dodag = 0;
 	mote->rank = 0;
 
@@ -51,6 +59,14 @@ void init_root(mote_t *mote) {
 
 	// Initialize routing table
 	mote->routing_table = hashmap_new();
+
+	// Initialize buffer of children
+	mote->children = malloc(MAX_NB_CHILDREN*sizeof(child_mote_t));
+
+	if (!mote->routing_table || !mote->children) {
+		printf("init_mote() of mote with address %u.%u : could not allocate enough memory\n", (mote->addr).u8[0], (mote->addr).u8[1]);
+		exit(-1);
+	}
 
 	mote->in_dodag = 1;
 	mote->rank = 0;
@@ -168,5 +184,53 @@ uint8_t choose_parent(mote_t *mote, const linkaddr_t* parent_addr, uint8_t paren
 	else {
 		printf("Already has a better parent !\n");
 		return 0;
+	}
+}
+
+/**
+ * Updates the timestamp of node having addr child_addr to the given time or adds the node if it didn't exist
+ * Prints an error if a node should be added but no more space is available
+ */
+void update_timestamp(mote_t mote, uint16_t time, linkaddr_t child_addr) {
+	child_mote_t *runner = mote->children;
+	first_free_ind = -1;
+	for (int i = 0; i < MAX_NB_CHILDREN; i++) {
+		if (!runner->in_use) {
+			if (first_free_ind = -1) {
+				first_free_ind = i;
+			}
+		} else if (linkaddr_cmp(&(runner->addr), runner)) {
+				// linkaddr_cmp returns non-zero if equal
+			runner->timestamp = time;
+			return;
+		}
+	}
+	if (first_free_ind == -1) {
+		printf("ERROR update_timestamp for node %u.%u : Too many child nodes, could not add/update timestamp of node %u.%u\n", mote->addr.u8[0], mote->addr.u8[1], child_addr.u8[0], child_addr.u8[1]);
+	} else {
+		child_mote_t* new_child = (mote->children) + first_free_ind;
+		new_child->in_use = 1;
+		new_child->addr = child_addr;
+		new_child->timestamp = time;
+	}
+}
+
+/**
+ * Removes children that did not send a message since a long time
+ */
+void remove_unresponding_children(mote_t mote, uint16_t current_time) {
+	child_mote_t *runner = mote->children;
+	for (int i = 0; i < MAX_NB_CHILDREN; i++) {
+		if (runner->in_use && current_time > runner->timestamp+TIMEOUT_CHILD) {
+			// time shouldn't wrap. 2^32 ~= 50 000 days ~= 136 years
+			// removing child data
+			runner->in_use = 0;
+			// TEMPORAIRE. TODO : on devrait mettre un compteur et chaque 5 min, on check le compteur
+			// si compteur > 0 on traverse la hashmap pour remove l'entrée de l'enfant mort + les entrées dépendantes de lui
+			// Problème ENCORE : si enfant 2e degré meurt et 3e degré aussi, comment peut-on delete
+			// l'enfant du 3e degré... car next-hop = 1e degré seulement...
+			// ou alors 1er degré remontera l'info !! bonne sol
+			hashmap_remove(mote->routing_table, runner->addr);
+		}
 	}
 }

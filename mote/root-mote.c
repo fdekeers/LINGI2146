@@ -46,6 +46,15 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 				child_addr.u8[0], child_addr.u8[1],
 				next_hop->u8[0], next_hop->u8[1]);
 			forward_DAO(conn, &mote, child_addr);
+
+			if (linkaddr_cmp(&child_addr, from)) {
+				// linkaddr_cmp returns non-zero if addresses are equal
+
+				// update timestamp of the child now or add the new child
+				update_timestamp(mote.children, clock_seconds());
+			}
+			
+			free(next_hop);
 		} else {
 			printf("Error adding to routing table\n");
 		}
