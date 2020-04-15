@@ -53,7 +53,7 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 		}
 
 	} else {
-		printf("Received unknown unicast message\n");
+		printf("Unknown runicast message received.\n");
 	}
 
 }
@@ -92,20 +92,26 @@ void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) {
 	// Strength of the last received packet
 	signed char rss = cc2420_last_rssi - 45;
 
-	if (type == DIS) {
+	if (type == DIS) { // DIS message received
 		
 		printf("DIS packet received.\n");
 		// If the mote is already in a DODAG, send DIO packet
 		if (mote.in_dodag) {
 			send_DIO(conn, &mote);
 		}
-	} else if (type == DIO) {
+	} else if (type == DIO) { // DIO message received
+
 		DIO_message_t* message = (DIO_message_t*) packetbuf_dataptr();
-		if (choose_parent(&mote, from, message->rank, rss)) {
+		if (linkaddr_cmp(from, &(mote.parent->addr))) {
+			// DIO message received from parent, update parent info
+			mote.parent->rank = message->rank;
+			mote.parent->rss = rss;
+		} else if (choose_parent(&mote, from, message->rank, rss)) {
 		    send_DAO(&runicast, &mote);
 		}
-	} else {
-		printf("Received message type unknown.\n");
+
+	} else { // Unknown message received
+		printf("Unknown broadcast message received.\n");
 	}
 
 }
