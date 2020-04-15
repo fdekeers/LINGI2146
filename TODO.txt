@@ -46,8 +46,6 @@ A implémenter maintenant :
 	- Messages DIO périodiques en broadcast
 	- Mettre à jour le RSS du parent à chaque DIO reçu
 	- Messages DAO périodiques en unicast, uniquement au parent (pour garder la routing table à jour)
-	- Hashmap : in_use (boolean / uint8); size & table_size (uint16)
-	- Hashmap : changer la constante de taille initiale
 	- Hashmap : lock ?
 	- Constante pour le nombre d'enfants directs
 	- Buffer de 10 (constante fixe) enfants directs de chaque node. Il nous faut les paramètres suivants : adresse, timestamp (avec clock_seconds), in_use

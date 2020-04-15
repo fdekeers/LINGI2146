@@ -27,8 +27,9 @@
 /* We need to keep keys and values */
 typedef struct _hashmap_element{
 	uint16_t key;
-	int in_use;
+	uint8_t in_use;
 	linkaddr_t data;
+	unsigned long time;
 } hashmap_element;
 
 /* A hashmap has some maximum size and current size,
@@ -50,5 +51,5 @@ extern uint16_t linkaddr2uint16_t (linkaddr_t x);
 extern void hashmap_free(hashmap_map *m);
 extern int hashmap_length(hashmap_map *m);
 
-#define INITIAL_SIZE (256) // initial size of hashmap
+#define INITIAL_SIZE (16) // initial size of hashmap
 #define MAX_CHAIN_LENGTH (8) // number of "looks after" for linear probing

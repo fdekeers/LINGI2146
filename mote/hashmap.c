@@ -97,7 +97,7 @@ int hashmap_rehash(hashmap_map *m){
         if (curr[i].in_use == 0)
             continue;
             
-		status = hashmap_put_int(m, curr[i].key, curr[i].data);
+		status = hashmap_put_int(m, curr[i].key, curr[i].data, curr[i].time);
 		if (status != MAP_OK)
 			return status;
 	}
@@ -111,6 +111,7 @@ int hashmap_rehash(hashmap_map *m){
  * Add a pointer to the hashmap with some key
  */
 int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value){
+	unsigned long time = clock_seconds();
 	int index;
 
 	/* Find a place to put our value */
@@ -124,6 +125,7 @@ int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value){
 
 	/* Set the data */
 	m->data[index].data = value;
+	m->data[index].time = time;
 	m->data[index].key = key;
 	m->data[index].in_use = 1;
 	m->size++; 
@@ -150,7 +152,7 @@ int hashmap_get_int(hashmap_map *m, uint16_t key, linkaddr_t *arg){
 	/* Linear probing, if necessary */
 	for(i = 0; i<MAX_CHAIN_LENGTH; i++){
 
-        int in_use = m->data[curr].in_use;
+        uint8_t in_use = m->data[curr].in_use;
         if (in_use == 1){
             if (m->data[curr].key == key){
                 *arg = (m->data[curr].data);
@@ -187,7 +189,7 @@ int hashmap_remove_int(hashmap_map *m, uint16_t key){
 	/* Linear probing, if necessary */
 	for(i = 0; i<MAX_CHAIN_LENGTH; i++){
 
-        int in_use = m->data[curr].in_use;
+        uint8_t in_use = m->data[curr].in_use;
         if (in_use == 1){
             if (m->data[curr].key == key){
                 /* Blank out the fields */
