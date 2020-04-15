@@ -34,10 +34,10 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 
 		printf("DAO message received from %d.%d\n", from->u8[0], from->u8[1]);
 
+		DAO_message_t* message = (DAO_message_t*) packetbuf_dataptr();
+
 		// Address of the mote that sent the DAO packet
-		linkaddr_t child_addr;
-		child_addr.u8[0] = *(data+1);
-		child_addr.u8[1] = *(data+2);
+		linkaddr_t child_addr = message->src_addr;
 
 		if (hashmap_put(mote.routing_table, child_addr, *from) == MAP_OK) {
 			linkaddr_t *next_hop = (linkaddr_t*) malloc(sizeof(linkaddr_t));

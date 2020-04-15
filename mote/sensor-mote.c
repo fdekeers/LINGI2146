@@ -34,10 +34,10 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 
 		printf("DAO message received from %d.%d\n", from->u8[0], from->u8[1]);
 
+		DAO_message_t* message = (DAO_message_t*) packetbuf_dataptr();
+
 		// Address of the mote that sent the DAO packet
-		linkaddr_t child_addr;
-		child_addr.u8[0] = *(data+1);
-		child_addr.u8[1] = *(data+2);
+		linkaddr_t child_addr = message->src_addr;
 
 		printf("Child address : %d.%d\n", child_addr.u8[0], child_addr.u8[1]);
 
@@ -100,8 +100,8 @@ void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) {
 			send_DIO(conn, &mote);
 		}
 	} else if (type == DIO) {
-		uint8_t rank_recv = *(data+1);
-		if (choose_parent(&mote, from, rank_recv, rss)) {
+		DIO_message_t* message = (DIO_message_t*) packetbuf_dataptr();
+		if (choose_parent(&mote, from, message->rank, rss)) {
 		    send_DAO(&runicast, &mote);
 		}
 	} else {
@@ -148,7 +148,7 @@ PROCESS_THREAD(sensor_mote, ev, data) {
 		if (!mote.in_dodag) {
 			send_DIS(&broadcast);
 		} else {
-			printf("Already in DODAG\n");
+			//printf("Already in DODAG\n");
 		}
 
 	}

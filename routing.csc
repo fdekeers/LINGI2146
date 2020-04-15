@@ -65,8 +65,8 @@
       <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
-        <x>27.434646258657892</x>
-        <y>53.330968508087196</y>
+        <x>44.73231659739526</x>
+        <y>18.02070808050552</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
@@ -77,14 +77,14 @@
         org.contikios.cooja.mspmote.interfaces.MspMoteID
         <id>1</id>
       </interface_config>
-      <motetype_identifier>z12</motetype_identifier>
+      <motetype_identifier>z11</motetype_identifier>
     </mote>
     <mote>
       <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
-        <x>52.193710206069554</x>
-        <y>71.652605012854</y>
+        <x>63.99550197792296</x>
+        <y>-3.577129407377205</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
@@ -95,14 +95,14 @@
         org.contikios.cooja.mspmote.interfaces.MspMoteID
         <id>2</id>
       </interface_config>
-      <motetype_identifier>z11</motetype_identifier>
+      <motetype_identifier>z12</motetype_identifier>
     </mote>
     <mote>
       <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
-        <x>63.456594941578906</x>
-        <y>43.9767423272609</y>
+        <x>80.46425694003892</x>
+        <y>-32.89157476861806</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
@@ -119,8 +119,8 @@
       <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
-        <x>88.40720703617072</x>
-        <y>14.359185629458871</y>
+        <x>27.75077496075793</x>
+        <y>52.63847035195362</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
@@ -137,8 +137,8 @@
       <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
-        <x>108.8982324425187</x>
-        <y>-4.870395019923734</y>
+        <x>60.369911377938614</x>
+        <y>84.3192236796349</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
@@ -170,7 +170,7 @@
       <skin>org.contikios.cooja.plugins.skins.UDGMVisualizerSkin</skin>
       <skin>org.contikios.cooja.plugins.skins.GridVisualizerSkin</skin>
       <skin>org.contikios.cooja.plugins.skins.MoteTypeVisualizerSkin</skin>
-      <viewport>1.8386166759635656 0.0 0.0 1.8386166759635656 87.80802321419246 80.97858368406094</viewport>
+      <viewport>1.863602554766141 0.0 0.0 1.863602554766141 112.41509504278778 86.02409549635085</viewport>
     </plugin_config>
     <width>400</width>
     <z>0</z>
