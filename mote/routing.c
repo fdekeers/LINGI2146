@@ -10,14 +10,16 @@
 ///////////////////
 
 // Values for the different types of RPL control messages
-const uint8_t DIS = 0;
-const uint8_t DIO = 1;
-const uint8_t DAO = 2;
+const uint8_t DIS = 1;
+const uint8_t DIO = 2;
+const uint8_t DAO = 3;
+const uint8_t DLT = 4;
 
 // Size of control messages
 const size_t DIS_size = sizeof(DIS_message_t);
 const size_t DIO_size = sizeof(DIO_message_t);
 const size_t DAO_size = sizeof(DAO_message_t);
+const size_t DLT_size = sizeof(DLT_message_t);
 
 
 

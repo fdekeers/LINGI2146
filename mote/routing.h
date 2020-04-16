@@ -48,11 +48,13 @@
 const uint8_t DIS;
 const uint8_t DIO;
 const uint8_t DAO;
+const uint8_t DLT;
 
 // Size of control messages
 const size_t DIS_size;
 const size_t DIO_size;
 const size_t DAO_size;
+const size_t DLT_size;
 
 
 
