@@ -60,7 +60,7 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 			printf("Error adding to routing table\n");
 		}
 
-	} else if (type == DLT) {
+	/*} else if (type == DLT) {
 
 		printf("DLT message received from %u.%u\n", from->u8[0], from->u8[1]);
 
@@ -75,7 +75,7 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 			if (linkaddr_cmp(&next_hop, from)) {
 				hashmap_remove(mote.routing_table, child_addr);
 			}
-		}
+		}*/
 
 	} else {
 		printf("Received unknown unicast message\n");

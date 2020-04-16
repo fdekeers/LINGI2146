@@ -19,6 +19,9 @@
 ///  CONSTANTS  ///
 ///////////////////
 
+// Infinite rank constant
+#define INFINITE_RANK 255
+
 // Constant for periodicity of messages [sec]
 #define PERIOD 3
 
@@ -48,13 +51,11 @@
 const uint8_t DIS;
 const uint8_t DIO;
 const uint8_t DAO;
-const uint8_t DLT;
 
 // Size of control messages
 const size_t DIS_size;
 const size_t DIO_size;
 const size_t DAO_size;
-const size_t DLT_size;
 
 
 
@@ -66,7 +67,6 @@ const size_t DLT_size;
 // We use another struct since we don't need all the information of the mote struct
 typedef struct parent_mote {
 	linkaddr_t addr;
-	uint8_t rank;
 	signed char rss;
 } parent_t;
 
@@ -132,9 +132,15 @@ void init_root(mote_t *mote);
 void init_parent(mote_t *mote, const linkaddr_t *parent_addr, uint8_t parent_rank, signed char rss);
 
 /**
- * Changes the parent of a mote
+ * Changes the parent of a mote.
  */
 void change_parent(mote_t *mote, const linkaddr_t *parent_addr, uint8_t parent_rank, signed char rss);
+
+/**
+ * Detaches a mote from the DODAG.
+ * Deletes the parent, and sets in_dodag and rank to 0.
+ */
+void detach(mote_t *mote);
 
 /**
  * Broadcasts a DIS message.
@@ -171,7 +177,7 @@ void update_timestamp(mote_t *mote, unsigned long time, linkaddr_t child_addr);
  * Sends a DLT message to the parent of this node, with child_addr as address of the child to remove
  * from the routing tables
  */
-void send_DLT(struct runicast_conn *conn, mote_t *mote, linkaddr_t child_addr);
+//void send_DLT(struct runicast_conn *conn, mote_t *mote, linkaddr_t child_addr);
 
 /**
  * Removes children that did not send a message since a long time

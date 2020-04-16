@@ -276,7 +276,7 @@ void hashmap_print(hashmap_map *m) {
 }
 
 /**
- * Removes entries that have timeout (based on arguments current_time and timeout_delay)
+ * Removes entries that have timed out (based on arguments current_time and timeout_delay)
  * Design choice : unsigned long overflow is not taken into account since it would wrap up in ~= 135 years
  */
 void hashmap_delete_timeout(hashmap_map *m, unsigned long current_time, unsigned long timeout_delay) {

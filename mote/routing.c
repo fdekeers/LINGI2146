@@ -47,7 +47,7 @@ void init_mote(mote_t *mote) {
 	}
 
 	mote->in_dodag = 0;
-	mote->rank = 0;
+	mote->rank = INFINITE_RANK;
 
 }
 
@@ -83,7 +83,6 @@ void init_parent(mote_t *mote, const linkaddr_t *parent_addr, uint8_t parent_ran
 	mote->parent = (parent_t*) malloc(sizeof(parent_t));
 	linkaddr_copy(&(mote->parent->addr), parent_addr);
 
-	mote->parent->rank = parent_rank;
 	mote->parent->rss = rss;
 
 	// Update the attributes of the mote
@@ -100,12 +99,24 @@ void change_parent(mote_t *mote, const linkaddr_t *parent_addr, uint8_t parent_r
 	// Set the Rime address
 	linkaddr_copy(&(mote->parent->addr), parent_addr);
 
-	mote->parent->rank = parent_rank;
 	mote->parent->rss = rss;
 
 	// Update the rank of the mote
 	mote->rank = parent_rank + 1;
 
+}
+
+/**
+ * Detaches a mote from the DODAG.
+ * Deletes the parent, and sets in_dodag and rank to 0.
+ * Restart its routing table.
+ */
+void detach(mote_t *mote) {
+	free(mote->parent);
+	hashmap_free(mote->routing_table);
+	mote->in_dodag = 0;
+	mote->rank = INFINITE_RANK;
+	mote->routing_table = hashmap_new();
 }
 
 /**
@@ -197,13 +208,13 @@ uint8_t choose_parent(mote_t *mote, const linkaddr_t* parent_addr, uint8_t paren
 		// Mote not in DODAG yet, initialize parent
 		init_parent(mote, parent_addr, parent_rank, rss);
 		printf("Parent set : Addr = %u.%u; Rank = %u\n",
-			mote->parent->addr.u8[0], mote->parent->addr.u8[1], mote->parent->rank);
+			mote->parent->addr.u8[0], mote->parent->addr.u8[1], parent_rank);
 		return PARENT_INIT;
 	} else if (rss > mote->parent->rss + RSS_THRESHOLD && mote->rank > parent_rank) {
 		// Better parent found, change parent
 		change_parent(mote, parent_addr, parent_rank, rss);
 		printf("Parent changed to : Addr = %u.%u; Rank = %u\n",
-			mote->parent->addr.u8[0], mote->parent->addr.u8[1], mote->parent->rank);
+			mote->parent->addr.u8[0], mote->parent->addr.u8[1], parent_rank);
 		return PARENT_CHANGED;
 	} else {
 		// Already has a better parent
@@ -245,7 +256,7 @@ void update_timestamp(mote_t *mote, unsigned long time, linkaddr_t child_addr) {
  * Sends a DLT message to the parent of this node, with child_addr as address of the child to remove
  * from the routing tables
  */
-void send_DLT(struct runicast_conn *conn, mote_t *mote, linkaddr_t child_addr) {
+/*void send_DLT(struct runicast_conn *conn, mote_t *mote, linkaddr_t child_addr) {
 
 	if (mote->parent == NULL) {
 		printf("Root mote. DLT not forwarded.\n");
@@ -265,7 +276,7 @@ void send_DLT(struct runicast_conn *conn, mote_t *mote, linkaddr_t child_addr) {
 
 	}
 
-}
+}*/
 
 /**
  * Removes children that did not send a message since a long time

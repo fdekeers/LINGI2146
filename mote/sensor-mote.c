@@ -61,7 +61,7 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 			printf("Error adding to routing table\n");
 		}
 
-	} else if (type == DLT) {
+	/*} else if (type == DLT) {
 
 		printf("DLT message received from %u.%u\n", from->u8[0], from->u8[1]);
 
@@ -82,7 +82,7 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 				}
 				
 			}
-		}
+		}*/
 
 	} else {
 		printf("Unknown runicast message received.\n");
@@ -135,11 +135,18 @@ void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) {
 	} else if (type == DIO) { // DIO message received
 
 		DIO_message_t* message = (DIO_message_t*) packetbuf_dataptr();
-		if (linkaddr_cmp(from, &(mote.parent->addr))) {
-			// DIO message received from parent, update parent info and send DAO to keep routing tables updated
-			mote.parent->rank = message->rank;
-			mote.parent->rss = rss;
-			send_DAO(&runicast, &mote);
+		if (linkaddr_cmp(from, &(mote.parent->addr))) { // DIO message received from parent
+
+			if (message->rank == INFINITE_RANK) { // Parent has detached from the DODAG
+				detach(&mote);
+				send_DIO(conn, &mote);
+				send_DIS(conn);
+			} else { // Update info
+				mote.rank = message->rank + 1;
+				mote.parent->rss = rss;
+				send_DAO(&runicast, &mote);
+			}
+
 		} else {
 			// DIO message received from other mote
 			uint8_t code = choose_parent(&mote, from, message->rank, rss);
