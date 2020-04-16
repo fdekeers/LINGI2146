@@ -19,16 +19,18 @@
 ///  CONSTANTS  ///
 ///////////////////
 
-// Constants for offset (in bytes) in packets
-#define OFFSET_TYPE  0
-#define OFFSET_TIME  1
-#define OFFSET_ADDR1 2
-#define OFFSET_ADDR2 3
+// Constant for periodicity of messages [sec]
+#define PERIOD 3
 
 // Constants for runicast sending functions
 #define SENT       1
 #define NOT_SENT  -1
 #define NO_PARENT -2
+
+// Return values for choose_parent function
+#define PARENT_NOT_CHANGED  0
+#define PARENT_INIT         1
+#define PARENT_CHANGED      2
 
 // Threshold to change parent (in dB)
 #define RSS_THRESHOLD 3
@@ -41,6 +43,7 @@
 
 // Timeout [sec] to know when to forget a child
 #define TIMEOUT_CHILD 180
+
 // Values for the different types of RPL control messages
 const uint8_t DIS;
 const uint8_t DIO;
@@ -99,6 +102,12 @@ typedef struct DAO_message {
 	linkaddr_t src_addr;
 } DAO_message_t;
 
+// Represents a DLT control message, that is used to remove old children from the routing tables
+typedef struct DLT_message {
+	uint8_t type;
+	linkaddr_t child_addr;
+} DLT_message_t;
+
 
 
 ///////////////////
@@ -121,6 +130,11 @@ void init_root(mote_t *mote);
 void init_parent(mote_t *mote, const linkaddr_t *parent_addr, uint8_t parent_rank, signed char rss);
 
 /**
+ * Changes the parent of a mote
+ */
+void change_parent(mote_t *mote, const linkaddr_t *parent_addr, uint8_t parent_rank, signed char rss);
+
+/**
  * Broadcasts a DIS message.
  */
 void send_DIS(struct broadcast_conn *conn);
@@ -141,7 +155,7 @@ void send_DAO(struct runicast_conn *conn, mote_t *mote);
 void forward_DAO(struct runicast_conn *conn, mote_t *mote, linkaddr_t child_addr);
 
 /**
- * Selects the parent, if it has a better rss.
+ * Selects the parent, if it has a lower rank and a better rss
  */
 uint8_t choose_parent(mote_t *mote, const linkaddr_t* parent_addr, uint8_t parent_rank, signed char rss);
 

@@ -1,0 +1,28 @@
+ROUTING PROTOCOL
+
+Mote that isn't in the DODAG yet
+	DIS messages
+		- Sent : periodically to get info on potential parents
+		- Received : ignored
+	DIO messages
+		- Sent : not
+		- Received : selects parent if rank is lower, and based on signal strength
+	DAO messages
+		- Sent : to parent when attached, contains address
+		- Received : not
+
+Mote that is already in the DODAG
+	DIS messages
+		- Sent : not
+		- Received : broadcasts DIO message containing rank, to inform potential children
+	DIO messages
+		- Sent : when a DIS message is received, and periodically, and when switched parent
+		- Received : switches parent if rank is lower and signal strength is better than current parent
+	DAO messages
+		- Sent : to the new parent, when it switches parent
+		- Received : forwarder towards root
+
+
+What happens to the children of a mote, when this mote switches parent ?
+The route has changed, we thus need to inform root.
+	-> Send DIO message, children receive it, and send DAO with new info.

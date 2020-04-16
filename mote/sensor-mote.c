@@ -95,11 +95,11 @@ static struct runicast_conn runicast;
  */
 void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) {
 
+	// Strength of the last received packet
+	signed char rss = cc2420_last_rssi;
+
 	uint8_t* data = (uint8_t*) packetbuf_dataptr();
 	uint8_t type = *data;
-
-	// Strength of the last received packet
-	signed char rss = cc2420_last_rssi - 45;
 
 	if (type == DIS) { // DIS message received
 		
@@ -108,15 +108,26 @@ void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) {
 		if (mote.in_dodag) {
 			send_DIO(conn, &mote);
 		}
+
 	} else if (type == DIO) { // DIO message received
 
 		DIO_message_t* message = (DIO_message_t*) packetbuf_dataptr();
 		if (linkaddr_cmp(from, &(mote.parent->addr))) {
-			// DIO message received from parent, update parent info
+			// DIO message received from parent, update parent info and send DAO to keep routing tables updated
 			mote.parent->rank = message->rank;
 			mote.parent->rss = rss;
-		} else if (choose_parent(&mote, from, message->rank, rss)) {
-		    send_DAO(&runicast, &mote);
+			send_DAO(&runicast, &mote);
+		} else {
+			// DIO message received from other mote
+			uint8_t code = choose_parent(&mote, from, message->rank, rss);
+		    if (code == PARENT_INIT) {
+		    	// If parent was initialized, send DAO message to new parent
+		    	send_DAO(&runicast, &mote);
+		    } else if (code == PARENT_CHANGED) {
+		    	// If parent has changed, send DIO message to update children and DAO to update routing tables
+		    	send_DIO(conn, &mote);
+		    	send_DAO(&runicast, &mote);
+		    }
 		}
 
 	} else { // Unknown message received
@@ -156,7 +167,7 @@ PROCESS_THREAD(sensor_mote, ev, data) {
 
 	while(1) {
 
-		etimer_set(&timer, CLOCK_SECOND*2 + random_rand() % CLOCK_SECOND);
+		etimer_set(&timer, CLOCK_SECOND*PERIOD + random_rand() % CLOCK_SECOND);
 
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
 

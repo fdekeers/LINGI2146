@@ -52,7 +52,7 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 
 				// update timestamp of the child now or add the new child
 				unsigned long time = clock_seconds();
-update_timestamp(&mote, time, child_addr);
+				update_timestamp(&mote, time, child_addr);
 			}
 			
 			free(next_hop);
@@ -91,8 +91,6 @@ void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) {
 
 	uint8_t* data = (uint8_t*) packetbuf_dataptr();
 	uint8_t type = *data;
-
-	signed char rss = cc2420_last_rssi - 45;
 
 	if (type == DIS) {
 		printf("DIS packet received.\n");
@@ -139,11 +137,14 @@ PROCESS_THREAD(root_mote, ev, data) {
 
 	while(1) {
 
-		etimer_set(&timer, CLOCK_SECOND*2 + random_rand() % CLOCK_SECOND);
+		etimer_set(&timer, CLOCK_SECOND*PERIOD + random_rand() % CLOCK_SECOND);
 
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
 
 		send_DIO(&broadcast, &mote);
+
+		printf("Routing table\n");
+		hashmap_print(mote.routing_table);
 
 	}
 

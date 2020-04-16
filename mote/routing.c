@@ -91,6 +91,22 @@ void init_parent(mote_t *mote, const linkaddr_t *parent_addr, uint8_t parent_ran
 }
 
 /**
+ * Changes the parent of a mote
+ */
+void change_parent(mote_t *mote, const linkaddr_t *parent_addr, uint8_t parent_rank, signed char rss) {
+
+	// Set the Rime address
+	linkaddr_copy(&(mote->parent->addr), parent_addr);
+
+	mote->parent->rank = parent_rank;
+	mote->parent->rss = rss;
+
+	// Update the rank of the mote
+	mote->rank = parent_rank + 1;
+
+}
+
+/**
  * Broadcasts a DIS message.
  */
 void send_DIS(struct broadcast_conn *conn) {
@@ -172,18 +188,25 @@ void forward_DAO(struct runicast_conn *conn, mote_t *mote, linkaddr_t child_addr
 }
 
 /**
- * Selects the parent. Returns 1 if the parent has changed.
+ * Selects the parent. Returns a code depending on if the parent has changed or not.
  */
 uint8_t choose_parent(mote_t *mote, const linkaddr_t* parent_addr, uint8_t parent_rank, signed char rss) {
-	if (!mote->in_dodag || (rss > mote->parent->rss + RSS_THRESHOLD && mote->rank >= parent_rank)) {
+	if (!mote->in_dodag) {
+		// Mote not in DODAG yet, initialize parent
 		init_parent(mote, parent_addr, parent_rank, rss);
 		printf("Parent set : Addr = %d.%d; Rank = %d\n",
 			mote->parent->addr.u8[0], mote->parent->addr.u8[1], mote->parent->rank);
-		return 1;
-	}
-	else {
+		return PARENT_INIT;
+	} else if (rss > mote->parent->rss + RSS_THRESHOLD && mote->rank > parent_rank) {
+		// Better parent found, change parent
+		change_parent(mote, parent_addr, parent_rank, rss);
+		printf("Parent changed to : Addr = %d.%d; Rank = %d\n",
+			mote->parent->addr.u8[0], mote->parent->addr.u8[1], mote->parent->rank);
+		return PARENT_CHANGED;
+	} else {
+		// Already has a better parent
 		printf("Already has a better parent !\n");
-		return 0;
+		return PARENT_NOT_CHANGED;
 	}
 }
 
@@ -201,7 +224,7 @@ void update_timestamp(mote_t *mote, unsigned long time, linkaddr_t child_addr) {
 				first_free_ind = i;
 			}
 		} else if (linkaddr_cmp(&(runner->addr), &(runner->addr))) {
-				// linkaddr_cmp returns non-zero if equal
+			// linkaddr_cmp returns non-zero if equal
 			runner->timestamp = time;
 			return;
 		}
