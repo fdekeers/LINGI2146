@@ -57,7 +57,7 @@ int hashmap_hash(hashmap_map *m, uint16_t key) {
 				return firstInd;
 			}
 			return curr;
-		
+		}
 		curr = (curr + 1) % m->table_size;
 	}
 
@@ -280,7 +280,7 @@ void hashmap_print(hashmap_map *m) {
 void hashmap_delete_timeout(hashmap_map *m, unsigned long current_time, unsigned long timeout_delay) {
 	hashmap_element *runner = m->data;
 	int i;
-	for (i = 0; i < table_size; i++) {
+	for (i = 0; i < m->table_size; i++) {
 		if (runner[i].in_use && current_time > runner[i].time+timeout_delay) {
 			// entry timeout
 			runner[i].in_use = 0;
