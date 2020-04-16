@@ -1,7 +1,7 @@
 #include "hashmap.h"
 
-/*
- * Convert linkaddr to a uint16_t
+/**
+ * Converts a linkaddr_t to a uint16_t
  */
 uint16_t linkaddr2uint16_t (linkaddr_t x) {
     uint8_t a = x.u8[0]; uint8_t b = x.u8[1];
@@ -9,8 +9,13 @@ uint16_t linkaddr2uint16_t (linkaddr_t x) {
     return newval;
 }
 
-void * my_calloc(int nmemb, int size) {
-	void * malloced = malloc(nmemb*size);
+/**
+ * Calloc reimplemented based on malloc and memset
+ * Returns a pointer to an allocated memory of size nmemb*size
+ * 		or NULL if it failed
+ */
+void *my_calloc(int nmemb, int size) {
+	void *malloced = malloc(nmemb*size);
 	if (!malloced) {
 		return NULL;
 	}
@@ -18,31 +23,12 @@ void * my_calloc(int nmemb, int size) {
 	return malloced;
 }
 
-/*
- * Return an empty hashmap, or NULL on failure.
+/**
+ * Returns the index of the location in data of
+ * the element that can be used to store information about
+ * the given key or MAP_FULL if too many probing is present
  */
-hashmap_map * hashmap_new() {
-	hashmap_map *m = (hashmap_map*) malloc(sizeof(hashmap_map));
-	if(!m) goto err;
-
-	m->data = (hashmap_element*) my_calloc (INITIAL_SIZE, sizeof(hashmap_element));
-	if(!m->data) goto err;
-
-	m->table_size = INITIAL_SIZE;
-	m->size = 0;
-
-	return m;
-	err:
-		if (m)
-			hashmap_free(m);
-		return NULL;
-}
-
-/*
- * Return the integer of the location in data
- * to store the point to the item, or MAP_FULL.
- */
-int hashmap_hash(hashmap_map *m, uint16_t key){
+int hashmap_hash(hashmap_map *m, uint16_t key) {
 	int curr;
 	int i;
 
@@ -52,10 +38,16 @@ int hashmap_hash(hashmap_map *m, uint16_t key){
 	/* Find the best index */
 	curr = key % m->table_size;
 
+	/* Value of index if found */
+	int firstInd = MAP_FULL;
+
 	/* Linear probing */
-	for(i = 0; i< MAX_CHAIN_LENGTH; i++){
-		if(m->data[curr].in_use == 0)
-			return curr++;  //mutated statement
+	for(i = 0; i< MAX_CHAIN_LENGTH; i++) {
+		if(m->data[curr].in_use == 0) {
+			if (firstInd == -1) {
+				firstInd = curr;
+			}
+		}
 
 		if(m->data[curr].in_use == 1 && (m->data[curr].key == key))
 			return curr;
@@ -63,15 +55,15 @@ int hashmap_hash(hashmap_map *m, uint16_t key){
 		curr = (curr + 1) % m->table_size;
 	}
 
-	return MAP_FULL;
+	return firstInd; // returns MAP_FULL if not found
 }
 
 
 
-/*
+/**
  * Doubles the size of the hashmap, and rehashes all the elements
  */
-int hashmap_rehash(hashmap_map *m){
+int hashmap_rehash(hashmap_map *m) {
 	int i;
 	int old_size;
 	hashmap_element* curr;
@@ -107,15 +99,37 @@ int hashmap_rehash(hashmap_map *m){
 	return MAP_OK;
 }
 
-/*
- * Add a pointer to the hashmap with some key
+/**
+ * Returns an empty hashmap, or NULL on failure
  */
-int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value, unsigned long time){
+hashmap_map * hashmap_new() {
+	hashmap_map *m = (hashmap_map*) malloc(sizeof(hashmap_map));
+	if(!m) goto err;
+
+	m->data = (hashmap_element*) my_calloc (INITIAL_SIZE, sizeof(hashmap_element));
+	if(!m->data) goto err;
+
+	m->table_size = INITIAL_SIZE;
+	m->size = 0;
+
+	return m;
+	err:
+		if (m)
+			hashmap_free(m);
+		return NULL;
+}
+
+/**
+ * Adds/updates a pointer to the hashmap with some key
+ * If the element was already present, the data is overwritten with the new one
+ * Return value : MAP_OMEM if out of memory, MAP_OK otherwise
+ */
+int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value, unsigned long time) {
 	int index;
 
 	/* Find a place to put our value */
 	index = hashmap_hash(m, key);
-	while(index == MAP_FULL){
+	while(index == MAP_FULL) {
 		if (hashmap_rehash(m) == MAP_OMEM) {
 			return MAP_OMEM;
 		}
@@ -132,17 +146,21 @@ int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value, unsigned lon
 	return MAP_OK;
 }
 
-/*
- * Add a pointer to the hashmap with some key.
+/**
+ * Adds a pointer to the hashmap with some key
+ * If the element was already present, the data is overwritten with the new one
+ * Return value : MAP_OMEM if out of memory, MAP_OK otherwise
  */
-int hashmap_put(hashmap_map *m, linkaddr_t key, linkaddr_t value){
+int hashmap_put(hashmap_map *m, linkaddr_t key, linkaddr_t value) {
 	unsigned long time = clock_seconds();
     return hashmap_put_int(m, linkaddr2uint16_t(key), value, time);
 }
-/*
- * Get your pointer out of the hashmap with a key
+
+/**
+ * $arg will point to the element with the given key
+ * Return value : MAP_OK if a value with the given key exists, MAP_MISSING otherwise
  */
-int hashmap_get_int(hashmap_map *m, uint16_t key, linkaddr_t *arg){
+int hashmap_get_int(hashmap_map *m, uint16_t key, linkaddr_t *arg) {
 	int curr;
 	int i;
 
@@ -150,11 +168,11 @@ int hashmap_get_int(hashmap_map *m, uint16_t key, linkaddr_t *arg){
 	curr = hashmap_hash(m, key);
 
 	/* Linear probing, if necessary */
-	for(i = 0; i<MAX_CHAIN_LENGTH; i++){
+	for(i = 0; i<MAX_CHAIN_LENGTH; i++) {
 
         uint8_t in_use = m->data[curr].in_use;
-        if (in_use == 1){
-            if (m->data[curr].key == key){
+        if (in_use == 1) {
+            if (m->data[curr].key == key) {
                 *arg = (m->data[curr].data);
                 return MAP_OK;
             }
@@ -169,17 +187,18 @@ int hashmap_get_int(hashmap_map *m, uint16_t key, linkaddr_t *arg){
 	return MAP_MISSING;
 }
 
-/*
- * Get your pointer out of the hashmap with a key
+/**
+ * $arg will point to the element with the given key
+ * Return value : MAP_OK if a value with the given key exists, MAP_MISSING otherwise
  */
-int hashmap_get(hashmap_map *m, linkaddr_t key, linkaddr_t *arg){
+int hashmap_get(hashmap_map *m, linkaddr_t key, linkaddr_t *arg) {
     return hashmap_get_int(m, linkaddr2uint16_t(key), arg);
 }
 
-/*
- * Remove an element with that key from the map
+/**
+ * Removes an element with that key from the map
  */
-int hashmap_remove_int(hashmap_map *m, uint16_t key){
+int hashmap_remove_int(hashmap_map *m, uint16_t key) {
 	int i;
 	int curr;
 
@@ -187,11 +206,11 @@ int hashmap_remove_int(hashmap_map *m, uint16_t key){
 	curr = hashmap_hash(m, key);
 
 	/* Linear probing, if necessary */
-	for(i = 0; i<MAX_CHAIN_LENGTH; i++){
+	for(i = 0; i<MAX_CHAIN_LENGTH; i++) {
 
         uint8_t in_use = m->data[curr].in_use;
-        if (in_use == 1){
-            if (m->data[curr].key == key){
+        if (in_use == 1) {
+            if (m->data[curr].key == key) {
                 /* Blank out the fields */
                 m->data[curr].in_use = 0;
                 //m->data[curr].data = NULL;
@@ -205,31 +224,36 @@ int hashmap_remove_int(hashmap_map *m, uint16_t key){
 		curr = (curr + 1) % m->table_size;
 	}
 
+	printf("Error : element with key addr %u.%u could not be found and thus wasn't removed\n", key >> 8, key & 0x0F);
 	/* Data not found */
 	return MAP_MISSING;
 }
 
-/*
- * Remove an element with that key from the map
+/**
+ * Removes an element with that key from the map
  */
-int hashmap_remove(hashmap_map *m, linkaddr_t key){
+int hashmap_remove(hashmap_map *m, linkaddr_t key) {
     return hashmap_remove_int(m, linkaddr2uint16_t(key));
 }
 
-/* Deallocate the hashmap */
-void hashmap_free(hashmap_map *m){
+/**
+ * Deallocates the hashmap
+ */
+void hashmap_free(hashmap_map *m) {
 	free(m->data);
 	free(m);
 }
 
-/* Return the length of the hashmap */
-int hashmap_length(hashmap_map *m){
+/**
+ * Returns the length of the hashmap (0 in the null case)
+ */
+int hashmap_length(hashmap_map *m) {
 	if(m != NULL) return m->size;
 	else return 0;
 }
 
 /**
- * Prints the content of the hashmap.
+ * Prints the content of the hashmap
  */
 void hashmap_print(hashmap_map *m) {
 	hashmap_element* map = m->data;

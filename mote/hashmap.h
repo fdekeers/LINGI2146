@@ -19,12 +19,27 @@
 #include "contiki.h"
 #include "net/rime/rime.h"
 
+/* ======================
+ *  CONSTANTS DEFINITION
+ * ====================== */
+
 #define MAP_MISSING -3  /* No such element */
 #define MAP_FULL -2 	/* Hashmap is full */
 #define MAP_OMEM -1 	/* Out of Memory */
 #define MAP_OK 0 	/* OK */
 
-/* We need to keep keys and values */
+#define INITIAL_SIZE (16) // initial size of hashmap
+#define MAX_CHAIN_LENGTH (3) // number of "looks after" for linear probing
+
+
+/* =======================
+ *  STRUCTURES DEFINITION
+ * ======================= */
+
+/** We need to keep keys and values
+ * the key should be the node from which we received a message
+ * the data should be the next-hop to get to the key node
+ */
 typedef struct _hashmap_element{
 	uint16_t key;
 	uint8_t in_use;
@@ -32,35 +47,95 @@ typedef struct _hashmap_element{
 	unsigned long time;
 } hashmap_element;
 
-/* A hashmap has some maximum size and current size,
- * as well as the data to hold. */
+/** A hashmap has some maximum size and current size,
+ * as well as the data to hold
+ */
 typedef struct _hashmap_map{
 	int table_size;
 	int size;
 	hashmap_element *data;
 } hashmap_map;
 
-extern hashmap_map * hashmap_new();
+/* ============================
+ *  INNER FUNCTIONS DEFINITION 
+ * ============================ */
+
+/**
+ * Converts a linkaddr_t to a uint16_t
+ */
+uint16_t linkaddr2uint16_t (linkaddr_t x);
+
+/**
+ * Calloc reimplemented based on malloc and memset
+ * Returns a pointer to an allocated memory of size nmemb*size
+ * 		or NULL if it failed
+ */
+void *my_calloc(int nmemb, int size);
+
+/**
+ * Returns the index of the location in data of
+ * the element that can be used to store information about
+ * the given key or MAP_FULL if too many probing is present
+ */
+int hashmap_hash(hashmap_map *m, uint16_t key);
+
+/**
+ * Doubles the size of the hashmap, and rehashes all the elements
+ */
+int hashmap_rehash(hashmap_map *m);
+
+/* =============================
+ *  EXTERN FUNCTIONS DEFINITION
+ * ============================= */
+
+/**
+ * Returns an empty hashmap, or NULL on failure
+ */
+extern hashmap_map *hashmap_new();
+
+/**
+ * Adds/updates a pointer to the hashmap with some key
+ * If the element was already present, the data is overwritten with the new one
+ * Return value : MAP_OMEM if out of memory, MAP_OK otherwise
+ */
 extern int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value, unsigned long time);
+
+/**
+ * $arg will point to the element with the given key
+ * Return value : MAP_OK if a value with the given key exists, MAP_MISSING otherwise
+ */
 extern int hashmap_get_int(hashmap_map *m, uint16_t key, linkaddr_t *arg);
+
+/**
+ * Removes an element with that key from the map
+ */
 extern int hashmap_remove_int(hashmap_map *m, uint16_t key);
+
+/**
+ * The following functions are calling the upper ones with slightly modified arguments
+ * These function are easier to call
+ */
 extern int hashmap_put(hashmap_map *m, linkaddr_t key, linkaddr_t value);
 extern int hashmap_get(hashmap_map *m, linkaddr_t key, linkaddr_t *arg);
 extern int hashmap_remove(hashmap_map *m, linkaddr_t key);
-extern uint16_t linkaddr2uint16_t (linkaddr_t x);
+
+/**
+ * Deallocates the hashmap
+ */
 extern void hashmap_free(hashmap_map *m);
+
+/**
+ * Returns the length of the hashmap (0 in the null case)
+ */
 extern int hashmap_length(hashmap_map *m);
 
 /**
- * Prints the content of the hashmap.
+ * Prints the content of the hashmap
  */
 extern void hashmap_print(hashmap_map *m);
 
 /**
  * Removes entries that have timeout (based on arguments current_time and timeout_delay)
+ * Design choice : unsigned long overflow is not taken into account since it would wrap up in ~= 135 years
  */
-void hashmap_delete_timeout(hashmap_map *m, unsigned long current_time, unsigned long timeout_delay);
-
-
-#define INITIAL_SIZE (16) // initial size of hashmap
-#define MAX_CHAIN_LENGTH (8) // number of "looks after" for linear probing
+extern void hashmap_delete_timeout(hashmap_map *m, unsigned long current_time, unsigned long timeout_delay);
