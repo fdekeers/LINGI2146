@@ -29,7 +29,7 @@
 #define MAP_OK 0 	/* OK */
 
 #define INITIAL_SIZE (16) // initial size of hashmap
-#define MAX_CHAIN_LENGTH (3) // number of "looks after" for linear probing
+#define MAX_CHAIN_LENGTH (7) // number of "looks after" for linear probing
 
 
 /* =======================

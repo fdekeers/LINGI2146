@@ -44,13 +44,11 @@ int hashmap_hash(hashmap_map *m, uint16_t key) {
 	/* Linear probing */
 	for(i = 0; i< MAX_CHAIN_LENGTH; i++) {
 		if(m->data[curr].in_use == 0) {
-			if (firstInd == -1) {
+			if (firstInd == MAP_FULL) {
 				firstInd = curr;
 			}
-		}
-
-		if(m->data[curr].in_use == 1 && (m->data[curr].key == key)) {
-			if (firstInd != -1) {
+		} else if(m->data[curr].in_use == 1 && (m->data[curr].key == key)) {
+			if (firstInd != MAP_FULL) {
 				// better to move closer !
 				memcpy((m->data)+firstInd, (m->data)+curr, sizeof(hashmap_element));
 				m->data[curr].in_use = 0;
@@ -137,17 +135,21 @@ int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value, unsigned lon
 	index = hashmap_hash(m, key);
 	while(index == MAP_FULL) {
 		if (hashmap_rehash(m) == MAP_OMEM) {
+			printf("Out of memory when trying to put node %u.%u\n", key >> 8, key & 0x0F);
 			return MAP_OMEM;
 		}
 		index = hashmap_hash(m, key);
 	}
 
 	/* Set the data */
+	if (!m->data[index].in_use) {
+		m->size++; // we are adding, not updating
+		m->data[index].in_use = 1;
+	}
 	m->data[index].data = value;
 	m->data[index].time = time;
 	m->data[index].key = key;
-	m->data[index].in_use = 1;
-	m->size++; 
+	 
 
 	return MAP_OK;
 }
