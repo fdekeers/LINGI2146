@@ -137,7 +137,7 @@ void send_DIO(struct broadcast_conn *conn, mote_t *mote) {
 	packetbuf_copyfrom((void*) message, DIO_size);
 	free(message);
 	broadcast_send(conn);
-	printf("DIO packet broadcasted, rank = %d\n", rank);
+	printf("DIO packet broadcasted, rank = %u\n", rank);
 
 }
 
@@ -158,7 +158,7 @@ void send_DAO(struct runicast_conn *conn, mote_t *mote) {
 		free(message);
 
 		runicast_send(conn, &(mote->parent->addr), MAX_RETRANSMISSIONS);
-		printf("DAO packet sent to parent at addr %d.%d\n",
+		printf("DAO packet sent to parent at addr %u.%u\n",
 			mote->parent->addr.u8[0], mote->parent->addr.u8[1]);
 
 	}
@@ -182,7 +182,7 @@ void forward_DAO(struct runicast_conn *conn, mote_t *mote, linkaddr_t child_addr
 		free(message);
 		
 		runicast_send(conn, &(mote->parent->addr), MAX_RETRANSMISSIONS);
-		printf("DAO packet forwarded to parent at addr %d.%d\n",
+		printf("DAO packet forwarded to parent at addr %u.%u\n",
 			mote->parent->addr.u8[0], mote->parent->addr.u8[1]);
 
 	}
@@ -196,13 +196,13 @@ uint8_t choose_parent(mote_t *mote, const linkaddr_t* parent_addr, uint8_t paren
 	if (!mote->in_dodag) {
 		// Mote not in DODAG yet, initialize parent
 		init_parent(mote, parent_addr, parent_rank, rss);
-		printf("Parent set : Addr = %d.%d; Rank = %d\n",
+		printf("Parent set : Addr = %u.%u; Rank = %u\n",
 			mote->parent->addr.u8[0], mote->parent->addr.u8[1], mote->parent->rank);
 		return PARENT_INIT;
 	} else if (rss > mote->parent->rss + RSS_THRESHOLD && mote->rank > parent_rank) {
 		// Better parent found, change parent
 		change_parent(mote, parent_addr, parent_rank, rss);
-		printf("Parent changed to : Addr = %d.%d; Rank = %d\n",
+		printf("Parent changed to : Addr = %u.%u; Rank = %u\n",
 			mote->parent->addr.u8[0], mote->parent->addr.u8[1], mote->parent->rank);
 		return PARENT_CHANGED;
 	} else {
@@ -259,7 +259,7 @@ void send_DLT(struct runicast_conn *conn, mote_t *mote, linkaddr_t child_addr) {
 		free(message);
 		
 		runicast_send(conn, &(mote->parent->addr), MAX_RETRANSMISSIONS);
-		printf("DLT packet sent to parent at addr %d.%d, for child %d.%d\n",
+		printf("DLT packet sent to parent at addr %u.%u, for child %u.%u\n",
 			mote->parent->addr.u8[0], mote->parent->addr.u8[1],
 			child_addr.u8[0], child_addr.u8[0]);
 

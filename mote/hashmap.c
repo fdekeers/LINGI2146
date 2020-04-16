@@ -237,7 +237,7 @@ void hashmap_print(hashmap_map *m) {
 	for (i = 0; i < m->table_size; i++) {
 		hashmap_element elem = *(map+i);
 		if (elem.in_use) {
-			printf("%d.%d; reachable from %d.%d\n",
+			printf("%u.%u; reachable from %u.%u\n",
 				elem.key >> 8, elem.key & 0x0f, elem.data.u8[0], elem.data.u8[1]);
 		}
 	}
