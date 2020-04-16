@@ -49,7 +49,13 @@ int hashmap_hash(hashmap_map *m, uint16_t key) {
 			}
 		}
 
-		if(m->data[curr].in_use == 1 && (m->data[curr].key == key))
+		if(m->data[curr].in_use == 1 && (m->data[curr].key == key)) {
+			if (firstInd != -1) {
+				// better to move closer !
+				memcpy((m->data)+firstInd, (m->data)+curr, sizeof(hashmap_element));
+				m->data[curr].in_use = 0;
+				return firstInd;
+			}
 			return curr;
 		
 		curr = (curr + 1) % m->table_size;
