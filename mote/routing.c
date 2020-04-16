@@ -240,6 +240,32 @@ void update_timestamp(mote_t *mote, unsigned long time, linkaddr_t child_addr) {
 }
 
 /**
+ * Sends a DLT message to the parent of this node, with child_addr as address of the child to remove
+ * from the routing tables
+ */
+void send_DLT(struct runicast_conn *conn, mote_t *mote, linkaddr_t child_addr) {
+
+	if (mote->parent == NULL) {
+		printf("Root mote. DLT not forwarded.\n");
+	} else {
+
+		DLT_message_t *message = (DLT_message_t*) malloc(DLT_size);
+		message->type = DLT;
+		message->child_addr = child_addr;
+
+		packetbuf_copyfrom((void*) message, DLT_size);
+		free(message);
+		
+		runicast_send(conn, &(mote->parent->addr), MAX_RETRANSMISSIONS);
+		printf("DLT packet sent to parent at addr %d.%d, for child %d.%d\n",
+			mote->parent->addr.u8[0], mote->parent->addr.u8[1],
+			child_addr.u8[0], child_addr.u8[0]);
+
+	}
+
+}
+
+/**
  * Removes children that did not send a message since a long time
  */
 void remove_unresponding_children(mote_t *mote, unsigned long current_time) {

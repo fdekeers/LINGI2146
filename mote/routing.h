@@ -166,6 +166,12 @@ uint8_t choose_parent(mote_t *mote, const linkaddr_t* parent_addr, uint8_t paren
 void update_timestamp(mote_t *mote, unsigned long time, linkaddr_t child_addr);
 
 /**
+ * Sends a DLT message to the parent of this node, with child_addr as address of the child to remove
+ * from the routing tables
+ */
+void send_DLT(struct runicast_conn *conn, mote_t *mote, linkaddr_t child_addr);
+
+/**
  * Removes children that did not send a message since a long time
  */
 void remove_unresponding_children(mote_t *mote, unsigned long current_time);
