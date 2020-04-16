@@ -10,6 +10,9 @@ Mote that isn't in the DODAG yet
 	DAO messages
 		- Sent : to parent when attached, contains address
 		- Received : not
+	DLT messages
+		- Sent : not
+		- Received : not
 
 Mote that is already in the DODAG
 	DIS messages
@@ -20,7 +23,10 @@ Mote that is already in the DODAG
 		- Received : switches parent if rank is lower and signal strength is better than current parent
 	DAO messages
 		- Sent : to the new parent, when it switches parent
-		- Received : forwarder towards root
+		- Received : forwarded towards root
+	DLT messages
+		- Sent : to parent, when a child has not sent info since too long, after having deleted it from children list and routing table
+		- Received : deletes the child from its routing table (if the message comes from its next hop), and forwards the message towards root 
 
 
 What happens to the children of a mote, when this mote switches parent ?
