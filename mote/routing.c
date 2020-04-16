@@ -42,7 +42,7 @@ void init_mote(mote_t *mote) {
 	mote->children = malloc(MAX_NB_CHILDREN*sizeof(child_mote_t));
 
 	if (!mote->routing_table || !mote->children) {
-		printf("init_mote() of mote with address %u.%u : could not allocate enough memory\n", (mote->addr).u8[0], (mote->addr).u8[1]);
+		printf("init_mote() : could not allocate enough memory\n");
 		exit(-1);
 	}
 
@@ -232,7 +232,7 @@ void update_timestamp(mote_t *mote, unsigned long time, linkaddr_t child_addr) {
 		}
 	}
 	if (first_free_ind == -1) {
-		printf("ERROR update_timestamp for node %u.%u : Too many child nodes, could not add/update timestamp of node %u.%u\n", mote->addr.u8[0], mote->addr.u8[1], child_addr.u8[0], child_addr.u8[1]);
+		printf("ERROR update_timestamp : Too many child nodes, could not add/update timestamp of node %u.%u\n", child_addr.u8[0], child_addr.u8[1]);
 	} else {
 		child_mote_t* new_child = (mote->children) + first_free_ind;
 		new_child->in_use = 1;
@@ -285,5 +285,6 @@ void remove_unresponding_children(mote_t *mote, unsigned long current_time) {
 			// ou alors 1er degré remontera l'info !! bonne sol
 			hashmap_remove(mote->routing_table, runner->addr);
 		}
+		runner++;
 	}
 }

@@ -97,7 +97,7 @@ int hashmap_rehash(hashmap_map *m){
         if (curr[i].in_use == 0)
             continue;
             
-		status = hashmap_put_int(m, curr[i].key, curr[i].data); //, curr[i].time);
+		status = hashmap_put_int(m, curr[i].key, curr[i].data, curr[i].time);
 		if (status != MAP_OK)
 			return status;
 	}
@@ -110,8 +110,7 @@ int hashmap_rehash(hashmap_map *m){
 /*
  * Add a pointer to the hashmap with some key
  */
-int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value){
-	//unsigned long time = clock_seconds();
+int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value, unsigned long time){
 	int index;
 
 	/* Find a place to put our value */
@@ -125,7 +124,7 @@ int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value){
 
 	/* Set the data */
 	m->data[index].data = value;
-	//m->data[index].time = time;
+	m->data[index].time = time;
 	m->data[index].key = key;
 	m->data[index].in_use = 1;
 	m->size++; 
@@ -137,7 +136,8 @@ int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value){
  * Add a pointer to the hashmap with some key.
  */
 int hashmap_put(hashmap_map *m, linkaddr_t key, linkaddr_t value){
-    return hashmap_put_int(m, linkaddr2uint16_t(key), value);
+	unsigned long time = clock_seconds();
+    return hashmap_put_int(m, linkaddr2uint16_t(key), value, time);
 }
 /*
  * Get your pointer out of the hashmap with a key
@@ -239,6 +239,22 @@ void hashmap_print(hashmap_map *m) {
 		if (elem.in_use) {
 			printf("%d.%d; reachable from %d.%d\n",
 				elem.key >> 8, elem.key & 0x0f, elem.data.u8[0], elem.data.u8[1]);
+		}
+	}
+}
+
+/**
+ * Removes entries that have timeout (based on arguments current_time and timeout_delay)
+ * Design choice : unsigned long overflow is not taken into account since it would wrap up in ~= 135 years
+ */
+void hashmap_delete_timeout(hashmap_map *m, unsigned long current_time, unsigned long timeout_delay) {
+	hashmap_element *runner = m->data;
+	int i;
+	for (i = 0; i < table_size; i++) {
+		if (runner[i].in_use && current_time > runner[i].time+timeout_delay) {
+			// entry timeout
+			runner[i].in_use = 0;
+			printf("Node with addr %u.%u timed out -> deleted\n", runner[i].key >> 8, runner[i].key & 0x0f);
 		}
 	}
 }
