@@ -42,11 +42,11 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 		printf("Child address : %u.%u\n", child_addr.u8[0], child_addr.u8[1]);
 
 		if (hashmap_put(mote.routing_table, child_addr, *from) == MAP_OK) {
-			linkaddr_t *next_hop = (linkaddr_t*) malloc(sizeof(linkaddr_t));
-			hashmap_get(mote.routing_table, child_addr, next_hop);
+			linkaddr_t next_hop;
+			hashmap_get(mote.routing_table, child_addr, &next_hop);
 			printf("Added child %u.%u. Reachable from %u.%u.\n",
 				child_addr.u8[0], child_addr.u8[1],
-				next_hop->u8[0], next_hop->u8[1]);
+				next_hop.u8[0], next_hop.u8[1]);
 			forward_DAO(conn, &mote, child_addr);
 
 			if (linkaddr_cmp(&child_addr, from)) {
@@ -56,33 +56,9 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 				update_timestamp(&mote, clock_seconds(), child_addr);
 			}
 			
-			free(next_hop);
 		} else {
 			printf("Error adding to routing table\n");
 		}
-
-	/*} else if (type == DLT) {
-
-		printf("DLT message received from %u.%u\n", from->u8[0], from->u8[1]);
-
-		DLT_message_t* message = (DLT_message_t*) packetbuf_dataptr();
-
-		// Addresses of the child mote to delete
-		linkaddr_t child_addr = message->child_addr;
-		linkaddr_t next_hop;
-
-		// Remove mote from the routing table if packet comes from its parent
-		if (hashmap_get(mote.routing_table, child_addr, &next_hop) == MAP_OK) {
-			if (linkaddr_cmp(&next_hop, from)) {
-				hashmap_remove(mote.routing_table, child_addr);
-
-				// Forward DLT packet towards root
-				if (mote.parent != NULL) {
-					send_DLT(conn, &mote, child_addr);
-				}
-				
-			}
-		}*/
 
 	} else {
 		printf("Unknown runicast message received.\n");
