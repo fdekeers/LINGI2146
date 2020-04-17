@@ -81,6 +81,8 @@ void init_parent(mote_t *mote, const linkaddr_t *parent_addr, uint8_t parent_ran
 	mote->parent = (parent_t*) malloc(sizeof(parent_t));
 	linkaddr_copy(&(mote->parent->addr), parent_addr);
 
+	// Set the attributes of the parent
+	mote->parent->rank = parent_rank;
 	mote->parent->rss = rss;
 
 	// Update the attributes of the mote
@@ -97,6 +99,8 @@ void change_parent(mote_t *mote, const linkaddr_t *parent_addr, uint8_t parent_r
 	// Set the Rime address
 	linkaddr_copy(&(mote->parent->addr), parent_addr);
 
+	// Set the attributes of the parent
+	mote->parent->rank = parent_rank;
 	mote->parent->rss = rss;
 
 	// Update the rank of the mote
@@ -110,11 +114,13 @@ void change_parent(mote_t *mote, const linkaddr_t *parent_addr, uint8_t parent_r
  * Restart its routing table.
  */
 void detach(mote_t *mote) {
-	free(mote->parent);
-	hashmap_free(mote->routing_table);
-	mote->in_dodag = 0;
-	mote->rank = INFINITE_RANK;
-	mote->routing_table = hashmap_new();
+	if (mote->in_dodag) { // No need to detach the mote if it isn't already in the DODAG
+		free(mote->parent);
+		hashmap_free(mote->routing_table);
+		mote->in_dodag = 0;
+		mote->rank = INFINITE_RANK;
+		mote->routing_table = hashmap_new();
+	}
 }
 
 /**
@@ -146,7 +152,7 @@ void send_DIO(struct broadcast_conn *conn, mote_t *mote) {
 	packetbuf_copyfrom((void*) message, DIO_size);
 	free(message);
 	broadcast_send(conn);
-	printf("DIO packet broadcasted, rank = %u\n", rank);
+	//printf("DIO packet broadcasted, rank = %u\n", rank);
 
 }
 
@@ -156,7 +162,7 @@ void send_DIO(struct broadcast_conn *conn, mote_t *mote) {
 void send_DAO(struct runicast_conn *conn, mote_t *mote) {
 
 	if (mote->parent == NULL) {
-		printf("Root mote. DAO not forwarded.\n");
+		//printf("Root mote. DAO not forwarded.\n");
 	} else {
 
 		DAO_message_t *message = (DAO_message_t*) malloc(DAO_size);
@@ -167,8 +173,8 @@ void send_DAO(struct runicast_conn *conn, mote_t *mote) {
 		free(message);
 
 		runicast_send(conn, &(mote->parent->addr), MAX_RETRANSMISSIONS);
-		printf("DAO packet sent to parent at addr %u.%u\n",
-			mote->parent->addr.u8[0], mote->parent->addr.u8[1]);
+		/*printf("DAO packet sent to parent at addr %u.%u\n",
+			mote->parent->addr.u8[0], mote->parent->addr.u8[1]);*/
 
 	}
 
@@ -180,7 +186,7 @@ void send_DAO(struct runicast_conn *conn, mote_t *mote) {
 void forward_DAO(struct runicast_conn *conn, mote_t *mote, linkaddr_t child_addr) {
 
 	if (mote->parent == NULL) {
-		printf("Root mote. DAO not forwarded.\n");
+		//printf("Root mote. DAO not forwarded.\n");
 	} else {
 
 		DAO_message_t *message = (DAO_message_t*) malloc(DAO_size);
@@ -191,11 +197,24 @@ void forward_DAO(struct runicast_conn *conn, mote_t *mote, linkaddr_t child_addr
 		free(message);
 		
 		runicast_send(conn, &(mote->parent->addr), MAX_RETRANSMISSIONS);
-		printf("DAO packet forwarded to parent at addr %u.%u\n",
-			mote->parent->addr.u8[0], mote->parent->addr.u8[1]);
+		/*printf("DAO packet forwarded to parent at addr %u.%u\n",
+			mote->parent->addr.u8[0], mote->parent->addr.u8[1]);*/
 
 	}
 
+}
+
+/**
+ * Returns 1 if the potential parent is better than the current parent, 0 otherwise.
+ * A parent is better than another if it has a lower rank, or if it has the same rank
+ * and a better signal strength (RSS), with a small threshold to avoid changing all the time
+ * in an unstable network.
+ */
+uint8_t is_better_parent(mote_t *mote, uint8_t parent_rank, signed char rss) {
+	uint8_t lower_rank = parent_rank < mote->parent->rank;
+	uint8_t same_rank = parent_rank == mote->parent->rank;
+	uint8_t better_rss = rss > mote->parent->rss + RSS_THRESHOLD;
+	return lower_rank || (same_rank && better_rss);
 }
 
 /**
@@ -205,18 +224,18 @@ uint8_t choose_parent(mote_t *mote, const linkaddr_t* parent_addr, uint8_t paren
 	if (!mote->in_dodag) {
 		// Mote not in DODAG yet, initialize parent
 		init_parent(mote, parent_addr, parent_rank, rss);
-		printf("Parent set : Addr = %u.%u; Rank = %u\n",
-			mote->parent->addr.u8[0], mote->parent->addr.u8[1], parent_rank);
+		/*printf("Parent set : Addr = %u.%u; Rank = %u\n",
+			mote->parent->addr.u8[0], mote->parent->addr.u8[1], mote->parent->rank);*/
 		return PARENT_INIT;
-	} else if (rss > mote->parent->rss + RSS_THRESHOLD && mote->rank > parent_rank) {
+	} else if (is_better_parent(mote, parent_rank, rss)) {
 		// Better parent found, change parent
 		change_parent(mote, parent_addr, parent_rank, rss);
-		printf("Parent changed to : Addr = %u.%u; Rank = %u\n",
-			mote->parent->addr.u8[0], mote->parent->addr.u8[1], parent_rank);
+		/*printf("Parent changed to : Addr = %u.%u; Rank = %u\n",
+			mote->parent->addr.u8[0], mote->parent->addr.u8[1], mote->parent->rank);*/
 		return PARENT_CHANGED;
 	} else {
 		// Already has a better parent
-		printf("Already has a better parent !\n");
+		//printf("Already has a better parent !\n");
 		return PARENT_NOT_CHANGED;
 	}
 }

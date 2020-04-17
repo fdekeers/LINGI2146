@@ -24,7 +24,7 @@
 
 // Constant for periodicity of messages [sec]
 #define SEND_PERIOD    3
-#define DELETE_PERIOD  9
+#define DELETE_PERIOD  10
 
 // Constants for runicast sending functions
 #define SENT       1
@@ -46,7 +46,7 @@
 #define MAX_NB_CHILDREN 10
 
 // Timeout [sec] to know when to forget a child
-#define TIMEOUT_CHILD 180
+#define TIMEOUT_CHILD 10
 
 // Values for the different types of RPL control messages
 const uint8_t DIS;
@@ -68,6 +68,7 @@ const size_t DAO_size;
 // We use another struct since we don't need all the information of the mote struct
 typedef struct parent_mote {
 	linkaddr_t addr;
+	uint8_t rank;
 	signed char rss;
 } parent_t;
 

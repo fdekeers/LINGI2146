@@ -32,7 +32,7 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 
 	if (type == DAO) {
 
-		printf("DAO message received from %u.%u\n", from->u8[0], from->u8[1]);
+		//printf("DAO message received from %u.%u\n", from->u8[0], from->u8[1]);
 
 		DAO_message_t* message = (DAO_message_t*) packetbuf_dataptr();
 
@@ -42,9 +42,9 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 		if (hashmap_put(mote.routing_table, child_addr, *from) == MAP_OK) {
 			linkaddr_t *next_hop = (linkaddr_t*) malloc(sizeof(linkaddr_t));
 			hashmap_get(mote.routing_table, child_addr, next_hop); 
-			printf("Added child %u.%u. Reachable from %u.%u.\n",
+			/*printf("Added child %u.%u. Reachable from %u.%u.\n",
 				child_addr.u8[0], child_addr.u8[1],
-				next_hop->u8[0], next_hop->u8[1]);
+				next_hop->u8[0], next_hop->u8[1]);*/
 			forward_DAO(conn, &mote, child_addr);
 
 			if (linkaddr_cmp(&child_addr, from)) {
@@ -61,7 +61,7 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 		}
 
 	} else {
-		printf("Received unknown unicast message\n");
+		printf("Unknown runicast message received.\n");
 	}
 
 
@@ -93,15 +93,15 @@ void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) {
 	uint8_t type = *data;
 
 	if (type == DIS) {
-		printf("DIS packet received.\n");
+		//printf("DIS packet received.\n");
 		// If the mote is already in a DODAG, send DIO packet
 		if (mote.in_dodag) {
 			send_DIO(conn, &mote);
 		}
 	} else if (type == DIO) {
-		printf("DIO message received.\n");
+		//printf("DIO message received.\n");
 	} else {
-		printf("Received message type unknown.\n");
+		printf("Unknown broadcast message received.\n");
 	}
 
 }
@@ -143,8 +143,9 @@ void send_callback(void *ptr) {
 void delete_callback(void *ptr) {
 	// Reset the timer
 	ctimer_reset(&delete_timer);
-	printf("Delete callback called.\n");
 
+	// Delete children that haven't sent messages since a long time
+	hashmap_delete_timeout(mote.routing_table, clock_seconds(), TIMEOUT_CHILD);
 }
 
 /**
@@ -155,7 +156,6 @@ void print_callback(void *ptr) {
 	ctimer_reset(&print_timer);
 
 	// Print the routing table
-	printf("Routing table\n");
 	hashmap_print(mote.routing_table);
 
 }
@@ -193,7 +193,7 @@ PROCESS_THREAD(root_mote, ev, data) {
 		ctimer_set(&delete_timer, CLOCK_SECOND*DELETE_PERIOD  + random_rand() % CLOCK_SECOND,
 			delete_callback, NULL);
 
-		ctimer_set(&print_timer, CLOCK_SECOND*DELETE_PERIOD  + random_rand() % CLOCK_SECOND,
+		ctimer_set(&print_timer, CLOCK_SECOND*5 + random_rand() % CLOCK_SECOND,
 			print_callback, NULL);
 
 		// Wait for the ctimer to trigger
