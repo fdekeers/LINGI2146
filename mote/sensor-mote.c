@@ -63,6 +63,11 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 			printf("Error adding to routing table\n");
 		}
 
+	} else if (type == DATA) {
+
+		DATA_message_t* message = (DATA_message_t*) packetbuf_dataptr();
+		forward_DATA(conn, message, &mote);
+
 	} else {
 		printf("Unknown runicast message received.\n");
 	}
@@ -165,6 +170,9 @@ struct ctimer delete_timer;
 // Callback timer to print routing table
 struct ctimer print_timer;
 
+// Callback timer to send data
+struct ctimer data_timer;
+
 /**
  * Callback function that will send the appropriate message when ctimer has expired.
  */
@@ -177,6 +185,7 @@ void send_callback(void *ptr) {
 		send_DIS(&broadcast);
 	} else {
 		send_DIO(&broadcast, &mote);
+		send_DAO(&runicast, &mote);
 	}
 
 }
@@ -211,6 +220,19 @@ void print_callback(void *ptr) {
 	// Print the routing table
 	hashmap_print(mote.routing_table);
 
+}
+
+/**
+ * Callback function that will send a data message to the parent.
+ */
+void data_callback(void *ptr) {
+	// Reset the timer
+	ctimer_reset(&data_timer);
+
+	// Send the data to parent if mote is in DODAG
+	if (mote.in_dodag) {
+		send_DATA(&runicast, &mote);
+	}
 }
 
 
@@ -248,6 +270,9 @@ PROCESS_THREAD(sensor_mote, ev, data) {
 
 		ctimer_set(&print_timer, CLOCK_SECOND*5 + random_rand() % CLOCK_SECOND,
 			print_callback, NULL);
+
+		ctimer_set(&data_timer, CLOCK_SECOND*10,
+			data_callback, NULL);
 
 		// Wait for the ctimers to trigger
 		PROCESS_YIELD();

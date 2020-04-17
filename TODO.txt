@@ -44,9 +44,7 @@ OTHER NODES
 
 A implémenter maintenant :
 
-	- Timer pour la suppression du parent et de la table de routage
-	- Trickle timer for periodic messages ?
+	- Trickle timer for periodic messages
+	- Down data packets (OPEN or CLOSE)
 
 	- Hashmap : lock ?
-
-	- Attention, parfois il faut supprimer les enfants des enfants... ou enfants des enfants des enfants => checkup toutes les 5 min, si enfant mort pendant ce temps -> lookup all hashtable

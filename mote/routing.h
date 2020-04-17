@@ -48,15 +48,20 @@
 // Timeout [sec] to know when to forget a child
 #define TIMEOUT_CHILD 10
 
-// Values for the different types of RPL control messages
+// Values for the different types of messages
 const uint8_t DIS;
 const uint8_t DIO;
 const uint8_t DAO;
+const uint8_t DATA;
+
+const uint8_t UP;
+const uint8_t DOWN;
 
 // Size of control messages
 const size_t DIS_size;
 const size_t DIO_size;
 const size_t DAO_size;
+const size_t DATA_size;
 
 
 
@@ -89,6 +94,7 @@ typedef struct mote {
 	hashmap_map* routing_table;
 } mote_t;
 
+
 // Represents a DIS control message
 typedef struct DIS_message {
 	uint8_t type;
@@ -106,11 +112,18 @@ typedef struct DAO_message {
 	linkaddr_t src_addr;
 } DAO_message_t;
 
-// Represents a DLT control message, that is used to remove old children from the routing tables
-typedef struct DLT_message {
+// Represents a DATA message, that carries the data from a sensor mote to the server
+typedef struct DATA_message {
 	uint8_t type;
-	linkaddr_t child_addr;
-} DLT_message_t;
+	linkaddr_t src_addr;
+	uint8_t data;
+} DATA_message_t;
+
+// Represents a OPEN message, that tells to a mote to open its valve
+typedef struct OPEN_message {
+	uint8_t type;
+	linkaddr_t dst_addr;
+} OPEN_message_t;
 
 
 
@@ -185,3 +198,18 @@ void update_timestamp(mote_t *mote, unsigned long time, linkaddr_t child_addr);
  * Removes children that did not send a message since a long time
  */
 void remove_unresponding_children(mote_t *mote, unsigned long current_time);
+
+/**
+ * Sends a DATA message, containing a random value, to the parent of the mote.
+ */
+void send_DATA(struct runicast_conn *conn, mote_t *mote);
+
+/**
+ * Sends a DATA message, containing a random value, to the parent of the mote.
+ */
+void send_DATA(struct runicast_conn *conn, mote_t *mote);
+
+/**
+ * Forwards a DATA message to the parent of the mote.
+ */
+void forward_DATA(struct runicast_conn *conn, DATA_message_t *message, mote_t *mote);

@@ -13,11 +13,16 @@
 const uint8_t DIS = 1;
 const uint8_t DIO = 2;
 const uint8_t DAO = 3;
+const uint8_t DATA = 0;
+
+const uint8_t UP = 0;
+const uint8_t DOWN = 1;
 
 // Size of control messages
 const size_t DIS_size = sizeof(DIS_message_t);
 const size_t DIO_size = sizeof(DIO_message_t);
 const size_t DAO_size = sizeof(DAO_message_t);
+const size_t DATA_size = sizeof(DATA_message_t);
 
 
 
@@ -134,7 +139,7 @@ void send_DIS(struct broadcast_conn *conn) {
 	packetbuf_copyfrom((void*) message, DIS_size);
 	free(message);
 	broadcast_send(conn);
-	printf("DIS packet broadcasted.\n");
+	//printf("DIS packet broadcasted.\n");
 
 }
 
@@ -315,4 +320,33 @@ void remove_unresponding_children(mote_t *mote, unsigned long current_time) {
 		}
 		runner++;
 	}
+}
+
+/**
+ * Sends a DATA message, containing a random value, to the parent of the mote.
+ */
+void send_DATA(struct runicast_conn *conn, mote_t *mote) {
+	DATA_message_t *message = (DATA_message_t*) malloc(DATA_size);
+	message->type = DATA;
+	message->src_addr = mote->addr;
+	message->data = (uint8_t) random_rand();
+	printf("Data = %u\n", message->data);
+
+	packetbuf_copyfrom((void*) message, DATA_size);
+	free(message);
+
+	printf("Parent address = %d.%d\n",
+		mote->parent->addr.u8[0], mote->parent->addr.u8[1]);
+	runicast_send(conn, &(mote->parent->addr), MAX_RETRANSMISSIONS);
+	/*printf("DATA packet sent to parent at addr %u.%u\n",
+		mote->parent->addr.u8[0], mote->parent->addr.u8[1]);*/
+
+}
+
+/**
+ * Forwards a DATA message to the parent of the mote.
+ */
+void forward_DATA(struct runicast_conn *conn, DATA_message_t *message, mote_t *mote) {
+	packetbuf_copyfrom((void*) message, DATA_size);
+	runicast_send(conn, &(mote->parent->addr), MAX_RETRANSMISSIONS);
 }

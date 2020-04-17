@@ -60,6 +60,14 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 			printf("Error adding to routing table\n");
 		}
 
+	} else if (type == DATA) {
+
+		DATA_message_t* message = (DATA_message_t*) packetbuf_dataptr();
+		printf("Received data packet.\n");
+		printf("Received data packet with value %u\n", message->data);
+
+		// TODO : Send the data to the server.
+
 	} else {
 		printf("Unknown runicast message received.\n");
 	}
