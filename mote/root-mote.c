@@ -59,7 +59,7 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 		} else {
 			printf("Error adding to routing table\n");
 		}
-		
+
 	} else {
 		printf("Received unknown unicast message\n");
 	}
@@ -111,6 +111,57 @@ const struct broadcast_callbacks broadcast_call = {broadcast_recv};
 static struct broadcast_conn broadcast;
 
 
+
+/////////////////////////
+///  CALLBACK TIMERS  ///
+/////////////////////////
+
+// Callback timer to send information messages
+struct ctimer send_timer;
+
+// Callback timer to delete parent or children
+struct ctimer delete_timer;
+
+// Callback timer to print routing table
+struct ctimer print_timer;
+
+/**
+ * Callback function that will send the appropriate message when ctimer has expired.
+ */
+void send_callback(void *ptr) {
+	// Reset the timer
+	ctimer_reset(&send_timer);
+
+	// Send the appropriate message
+	send_DIO(&broadcast, &mote);
+
+}
+
+/**
+ * Callback function that will delete.
+ */
+void delete_callback(void *ptr) {
+	// Reset the timer
+	ctimer_reset(&delete_timer);
+	printf("Delete callback called.\n");
+
+}
+
+/**
+ * Callback function that will print the routing table.
+ */
+void print_callback(void *ptr) {
+	// Reset the timer
+	ctimer_reset(&print_timer);
+
+	// Print the routing table
+	printf("Routing table\n");
+	hashmap_print(mote.routing_table);
+
+}
+
+
+
 //////////////////////
 ///  MAIN PROCESS  ///
 //////////////////////
@@ -127,8 +178,7 @@ PROCESS_THREAD(root_mote, ev, data) {
 		created = 1;
 	}
 
-	static struct etimer timer;
-	PROCESS_EXITHANDLER(broadcast_close(&broadcast);)
+	PROCESS_EXITHANDLER(broadcast_close(&broadcast); runicast_close(&runicast);)
 
 	PROCESS_BEGIN();
 
@@ -137,14 +187,17 @@ PROCESS_THREAD(root_mote, ev, data) {
 
 	while(1) {
 
-		etimer_set(&timer, CLOCK_SECOND*PERIOD + random_rand() % CLOCK_SECOND);
+		ctimer_set(&send_timer, CLOCK_SECOND*SEND_PERIOD + random_rand() % CLOCK_SECOND,
+			send_callback, NULL);
 
-		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
+		ctimer_set(&delete_timer, CLOCK_SECOND*DELETE_PERIOD  + random_rand() % CLOCK_SECOND,
+			delete_callback, NULL);
 
-		send_DIO(&broadcast, &mote);
+		ctimer_set(&print_timer, CLOCK_SECOND*DELETE_PERIOD  + random_rand() % CLOCK_SECOND,
+			print_callback, NULL);
 
-		printf("Routing table\n");
-		hashmap_print(mote.routing_table);
+		// Wait for the ctimer to trigger
+		PROCESS_YIELD();
 
 	}
 

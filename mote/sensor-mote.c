@@ -147,6 +147,45 @@ const struct broadcast_callbacks broadcast_call = {broadcast_recv};
 static struct broadcast_conn broadcast;
 
 
+
+/////////////////////////
+///  CALLBACK TIMERS  ///
+/////////////////////////
+
+// Callback timer to send information messages
+struct ctimer send_timer;
+
+// Callback timer to delete parent or children
+struct ctimer delete_timer;
+
+/**
+ * Callback function that will send the appropriate message when ctimer has expired.
+ */
+void send_callback(void *ptr) {
+	// Reset the timer
+	ctimer_reset(&send_timer);
+
+	// Send the appropriate message
+	if (!mote.in_dodag) {
+		send_DIS(&broadcast);
+	} else {
+		send_DIO(&broadcast, &mote);
+	}
+
+}
+
+/**
+ * Callback function that will delete.
+ */
+void delete_callback(void *ptr) {
+	// Reset the timer
+	ctimer_reset(&delete_timer);
+	printf("Delete callback called.\n");
+
+}
+
+
+
 //////////////////////
 ///  MAIN PROCESS  ///
 //////////////////////
@@ -163,8 +202,7 @@ PROCESS_THREAD(sensor_mote, ev, data) {
 		created = 1;
 	}
 
-	static struct etimer timer;
-	PROCESS_EXITHANDLER(broadcast_close(&broadcast);)
+	PROCESS_EXITHANDLER(broadcast_close(&broadcast); runicast_close(&runicast);)
 
 	PROCESS_BEGIN();
 
@@ -173,15 +211,14 @@ PROCESS_THREAD(sensor_mote, ev, data) {
 
 	while(1) {
 
-		etimer_set(&timer, CLOCK_SECOND*PERIOD + random_rand() % CLOCK_SECOND);
+		ctimer_set(&send_timer, CLOCK_SECOND*SEND_PERIOD + random_rand() % CLOCK_SECOND,
+			send_callback, NULL);
 
-		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
+		ctimer_set(&delete_timer, CLOCK_SECOND*DELETE_PERIOD  + random_rand() % CLOCK_SECOND,
+			delete_callback, NULL);
 
-		if (!mote.in_dodag) {
-			send_DIS(&broadcast);
-		} else {
-			send_DIO(&broadcast, &mote);
-		}
+		// Wait for the ctimer to trigger
+		PROCESS_YIELD();
 
 	}
 

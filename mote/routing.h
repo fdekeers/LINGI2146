@@ -23,7 +23,8 @@
 #define INFINITE_RANK 255
 
 // Constant for periodicity of messages [sec]
-#define PERIOD 3
+#define SEND_PERIOD    3
+#define DELETE_PERIOD  9
 
 // Constants for runicast sending functions
 #define SENT       1
