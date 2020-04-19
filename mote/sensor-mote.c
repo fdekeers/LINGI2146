@@ -13,8 +13,11 @@
 #include <stdlib.h>
 #include "random.h"
 
-// Period of sending data messages
+// Period of sending data messages [sec]
 #define DATA_PERIOD 60
+
+// Duration of the opening of the valve [sec]
+#define OPEN_TIME 600
 
 
 // Represents the attributes of this mote
@@ -58,6 +61,9 @@ struct ctimer print_timer;
 
 // Callback timer to send data
 struct ctimer data_timer;
+
+// Callback timer to open the valve
+struct ctimer open_timer;
 
 
 /**
@@ -159,6 +165,13 @@ void data_callback(void *ptr) {
 	}
 }
 
+/**
+ * Callback function that will turn off the green LED.
+ */
+void open_callback(void *ptr) {
+	leds_off(LEDS_GREEN);
+}
+
 
 
 /////////////////////////////
@@ -216,7 +229,10 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 		OPEN_message_t* message = (OPEN_message_t*) packetbuf_dataptr();
 		linkaddr_t dst_addr = message->dst_addr;
 		if (linkaddr_cmp(&dst_addr, &(mote.addr))) {
-			// TODO : Open valve
+			// Open valve : turn on green LED
+			leds_on(LEDS_GREEN);
+			// Set timer to turn off green LED after 10 min
+			ctimer_set(&open_timer, CLOCK_SECOND*OPEN_TIME, open_callback, NULL);
 		} else {
 			forward_OPEN(conn, message, &mote);
 		}
