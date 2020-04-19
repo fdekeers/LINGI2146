@@ -7,6 +7,7 @@
 #include "dev/leds.h"
 
 #include "routing.h"
+#include "trickle-timer.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -157,9 +158,9 @@ static struct broadcast_conn broadcast;
 
 
 
-/////////////////////////
-///  CALLBACK TIMERS  ///
-/////////////////////////
+////////////////
+///  TIMERS  ///
+////////////////
 
 // Callback timer to send information messages
 struct ctimer send_timer;
@@ -236,6 +237,10 @@ void data_callback(void *ptr) {
 }
 
 
+// Trickle timer for the periodic messages
+trickle_timer_t t_timer;
+
+
 
 //////////////////////
 ///  MAIN PROCESS  ///
@@ -261,6 +266,8 @@ PROCESS_THREAD(sensor_mote, ev, data) {
 	runicast_open(&runicast, 144, &runicast_callbacks);
 
 	while(1) {
+
+		printf("Time = %d\n", random_rand());
 
 		ctimer_set(&send_timer, CLOCK_SECOND*SEND_PERIOD + random_rand() % CLOCK_SECOND,
 			send_callback, NULL);
