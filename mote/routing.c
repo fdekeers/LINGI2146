@@ -10,10 +10,11 @@
 ///////////////////
 
 // Values for the different types of RPL control messages
-const uint8_t DIS = 1;
-const uint8_t DIO = 2;
-const uint8_t DAO = 3;
+const uint8_t DIS = 2;
+const uint8_t DIO = 3;
+const uint8_t DAO = 4;
 const uint8_t DATA = 0;
+const uint8_t OPEN = 1;
 
 const uint8_t UP = 0;
 const uint8_t DOWN = 1;
@@ -23,6 +24,7 @@ const size_t DIS_size = sizeof(DIS_message_t);
 const size_t DIO_size = sizeof(DIO_message_t);
 const size_t DAO_size = sizeof(DAO_message_t);
 const size_t DATA_size = sizeof(DATA_message_t);
+const size_t OPEN_size = sizeof(OPEN_message_t);
 
 
 
@@ -371,5 +373,13 @@ void forward_DATA(struct runicast_conn *conn, DATA_message_t *message, mote_t *m
  * Forwards an OPEN message to the next hop mote on the path to the destination.
  */
 void forward_OPEN(struct runicast_conn *conn, OPEN_message_t *message, mote_t *mote) {
-
+	// Address of the next hop towards destination
+	linkaddr_t next_hop;
+	if (hashmap_get(mote->routing_table, message->dst_addr, &next_hop) == MAP_OK) {
+		// Forward to next_hop
+		packetbuf_copyfrom((void*) message, OPEN_size);
+		runicast_send(conn, &next_hop, MAX_RETRANSMISSIONS);
+	} else {
+		printf("Error in forwarding OPEN message.\n");
+	}
 }

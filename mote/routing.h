@@ -47,6 +47,7 @@ const uint8_t DIS;
 const uint8_t DIO;
 const uint8_t DAO;
 const uint8_t DATA;
+const uint8_t OPEN;
 
 const uint8_t UP;
 const uint8_t DOWN;
@@ -56,6 +57,7 @@ const size_t DIS_size;
 const size_t DIO_size;
 const size_t DAO_size;
 const size_t DATA_size;
+const size_t OPEN_size;
 
 
 

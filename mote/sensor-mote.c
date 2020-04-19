@@ -218,7 +218,7 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 		if (linkaddr_cmp(&dst_addr, &(mote.addr))) {
 			// TODO : Open valve
 		} else {
-			forward_OPEN(conn, message, &mote, dst_addr);
+			forward_OPEN(conn, message, &mote);
 		}
 
 	} else {
