@@ -126,10 +126,12 @@ hashmap_map * hashmap_new() {
 /**
  * Adds/updates a pointer to the hashmap with some key
  * If the element was already present, the data is overwritten with the new one
- * Return value : MAP_OMEM if out of memory, MAP_OK otherwise
+ * Return value : MAP_OMEM if out of memory, MAP_NEW if an element was added,
+ * 				  MAP_UPDATE if an element was updated.
  */
 int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value, unsigned long time) {
 	int index;
+	int ret = MAP_UPDATE;
 
 	/* Find a place to put our value */
 	index = hashmap_hash(m, key);
@@ -143,21 +145,23 @@ int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value, unsigned lon
 
 	/* Set the data */
 	if (!m->data[index].in_use) {
+		ret = MAP_NEW;
 		m->size++; // we are adding, not updating
 		m->data[index].in_use = 1;
 	}
 	m->data[index].data = value;
 	m->data[index].time = time;
 	m->data[index].key = key;
-	 
 
-	return MAP_OK;
+	return ret;
+
 }
 
 /**
  * Adds a pointer to the hashmap with some key
  * If the element was already present, the data is overwritten with the new one
- * Return value : MAP_OMEM if out of memory, MAP_OK otherwise
+ * Return value : MAP_OMEM if out of memory, MAP_NEW if an element was added,
+ * 				  MAP_UPDATE if an element was updated.
  */
 int hashmap_put(hashmap_map *m, linkaddr_t key, linkaddr_t value) {
 	unsigned long time = clock_seconds();
@@ -276,17 +280,21 @@ void hashmap_print(hashmap_map *m) {
 }
 
 /**
- * Removes entries that have timed out (based on arguments current_time and timeout_delay)
+ * Removes entries that have timed out (based on current time and TIMEOUT_CHILD)
  * Design choice : unsigned long overflow is not taken into account since it would wrap up in ~= 135 years
+ * Returns 1 if at least one element has been removed, 0 if no element has been removed.
  */
-void hashmap_delete_timeout(hashmap_map *m, unsigned long current_time, unsigned long timeout_delay) {
+int hashmap_delete_timeout(hashmap_map *m) {
+	int ret = 0;
 	hashmap_element *runner = m->data;
 	int i;
 	for (i = 0; i < m->table_size; i++) {
-		if (runner[i].in_use && current_time > runner[i].time+timeout_delay) {
+		if (runner[i].in_use && clock_seconds() > runner[i].time + TIMEOUT) {
 			// entry timeout
 			runner[i].in_use = 0;
 			printf("Node with addr %u.%u timed out -> deleted\n", runner[i].key >> 8, runner[i].key & 0x0f);
+			ret = 1;
 		}
 	}
+	return ret;
 }

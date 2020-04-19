@@ -44,7 +44,8 @@ OTHER NODES
 
 A implémenter maintenant :
 
-	- Trickle timer for periodic messages
-	- Down data packets (OPEN or CLOSE)
-
 	- Hashmap : lock ?
+
+
+CLOCK_SECOND = 128
+	-> 1 second = 128 ticks

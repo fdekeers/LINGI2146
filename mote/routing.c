@@ -97,6 +97,21 @@ void init_parent(mote_t *mote, const linkaddr_t *parent_addr, uint8_t parent_ran
 }
 
 /**
+ * Updates the attributes of the parent of a mote.
+ * Returns 1 if the rank of the parent has changed, 0 if it hasn't changed.
+ */
+uint8_t update_parent(mote_t *mote, uint8_t parent_rank, signed char rss) {
+	mote->parent->rss = rss;
+	if (parent_rank != mote->parent->rank) {
+		mote->parent->rank = parent_rank;
+		mote->rank = parent_rank + 1;
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+/**
  * Changes the parent of a mote
  */
 void change_parent(mote_t *mote, const linkaddr_t *parent_addr, uint8_t parent_rank, signed char rss) {
@@ -231,7 +246,7 @@ uint8_t choose_parent(mote_t *mote, const linkaddr_t* parent_addr, uint8_t paren
 		init_parent(mote, parent_addr, parent_rank, rss);
 		/*printf("Parent set : Addr = %u.%u; Rank = %u\n",
 			mote->parent->addr.u8[0], mote->parent->addr.u8[1], mote->parent->rank);*/
-		return PARENT_INIT;
+		return PARENT_NEW;
 	} else if (is_better_parent(mote, parent_rank, rss)) {
 		// Better parent found, change parent
 		change_parent(mote, parent_addr, parent_rank, rss);
@@ -248,7 +263,7 @@ uint8_t choose_parent(mote_t *mote, const linkaddr_t* parent_addr, uint8_t paren
 /**
  * Updates the timestamp of node having addr child_addr to the given time or adds the node if it didn't exist
  * Prints an error if a node should be added but no more space is available
- */
+ *//*
 void update_timestamp(mote_t *mote, unsigned long time, linkaddr_t child_addr) {
 	child_mote_t *runner = mote->children;
 	int first_free_ind = -1;
@@ -272,7 +287,7 @@ void update_timestamp(mote_t *mote, unsigned long time, linkaddr_t child_addr) {
 		new_child->addr = child_addr;
 		new_child->timestamp = time;
 	}
-}
+}*/
 
 /**
  * Sends a DLT message to the parent of this node, with child_addr as address of the child to remove
@@ -303,11 +318,12 @@ void update_timestamp(mote_t *mote, unsigned long time, linkaddr_t child_addr) {
 /**
  * Removes children that did not send a message since a long time
  */
+/*
 void remove_unresponding_children(mote_t *mote, unsigned long current_time) {
 	child_mote_t *runner = mote->children;
 	int i;
 	for (i = 0; i < MAX_NB_CHILDREN; i++) {
-		if (runner->in_use && current_time > runner->timestamp+TIMEOUT_CHILD) {
+		if (runner->in_use && current_time > runner->timestamp+TIMEOUT) {
 			// time shouldn't wrap. 2^32 ~= 50 000 days ~= 136 years
 			// removing child data
 			runner->in_use = 0;
@@ -320,7 +336,7 @@ void remove_unresponding_children(mote_t *mote, unsigned long current_time) {
 		}
 		runner++;
 	}
-}
+}*/
 
 /**
  * Sends a DATA message, containing a random value, to the parent of the mote.
@@ -349,4 +365,11 @@ void send_DATA(struct runicast_conn *conn, mote_t *mote) {
 void forward_DATA(struct runicast_conn *conn, DATA_message_t *message, mote_t *mote) {
 	packetbuf_copyfrom((void*) message, DATA_size);
 	runicast_send(conn, &(mote->parent->addr), MAX_RETRANSMISSIONS);
+}
+
+/**
+ * Forwards an OPEN message to the next hop mote on the path to the destination.
+ */
+void forward_OPEN(struct runicast_conn *conn, OPEN_message_t *message, mote_t *mote) {
+
 }

@@ -7,6 +7,7 @@
 #include "dev/leds.h"
 
 #include "routing.h"
+#include "trickle-timer.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,6 +17,83 @@
 // Represents the attributes of this mote
 mote_t mote;
 uint8_t created = 0;
+
+// Trickle timer for the periodic messages
+trickle_timer_t t_timer;
+
+// Broadcast connection
+static struct broadcast_conn broadcast;
+
+// Reliable unicast (runicast) connection
+static struct runicast_conn runicast;
+
+
+
+/////////////////////////
+///  CALLBACK TIMERS  ///
+/////////////////////////
+
+// Callback timer to send information messages
+struct ctimer send_timer;
+
+// Callback timer to delete parent or children
+struct ctimer children_timer;
+
+// Callback timer to print routing table
+struct ctimer print_timer;
+
+/**
+ * Callback function that will send the appropriate message when ctimer has expired.
+ */
+void send_callback(void *ptr) {
+
+	// Send a DIO message
+	send_DIO(&broadcast, &mote);
+
+	// Update the trickle timer
+	trickle_update(&t_timer);
+
+	// Restart the timer with a new random value
+	ctimer_set(&send_timer, trickle_random(&t_timer), send_callback, NULL);
+
+}
+
+/**
+ * Callback function that will delete unresponsive children from the routing table.
+ */
+void children_callback(void *ptr) {
+
+	// Delete children that haven't sent messages since a long time
+	if (hashmap_delete_timeout(mote.routing_table)) {
+		// Children have been deleted, reset trickle timer
+		trickle_reset(&t_timer);
+	}
+
+	// Restart the timer with a new random value
+	ctimer_set(&children_timer, CLOCK_SECOND*TIMEOUT - random_rand() % (CLOCK_SECOND*5),
+		children_callback, NULL);
+
+}
+
+/**
+ * Callback function that will print the routing table.
+ */
+void print_callback(void *ptr) {
+	// Reset the timer
+	ctimer_reset(&print_timer);
+	// Print the routing table
+	hashmap_print(mote.routing_table);
+}
+
+/**
+ * Resets the trickle timer and restarts the callback timer that uses it (sending timer)
+ */
+void reset_timers(trickle_timer_t *timer) {
+	trickle_reset(&t_timer);
+	ctimer_set(&send_timer, trickle_random(&t_timer),
+		send_callback, NULL);
+}
+
 
 
 ////////////////////////////
@@ -39,24 +117,20 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 		// Address of the mote that sent the DAO packet
 		linkaddr_t child_addr = message->src_addr;
 
-		if (hashmap_put(mote.routing_table, child_addr, *from) == MAP_OK) {
-			linkaddr_t *next_hop = (linkaddr_t*) malloc(sizeof(linkaddr_t));
-			hashmap_get(mote.routing_table, child_addr, next_hop); 
-			/*printf("Added child %u.%u. Reachable from %u.%u.\n",
-				child_addr.u8[0], child_addr.u8[1],
-				next_hop->u8[0], next_hop->u8[1]);*/
-			forward_DAO(conn, &mote, child_addr);
+		int err = hashmap_put(mote.routing_table, child_addr, *from);
+		if (err == MAP_NEW) { // A new child was added to the routing table
+			// Reset trickle timer and sending timer
+			reset_timers(&t_timer);
 
-			if (linkaddr_cmp(&child_addr, from)) {
+			/*if (linkaddr_cmp(&child_addr, from)) {
 				// linkaddr_cmp returns non-zero if addresses are equal
 
 				// update timestamp of the child now or add the new child
 				unsigned long time = clock_seconds();
 				update_timestamp(&mote, time, child_addr);
-			}
+			}*/
 			
-			free(next_hop);
-		} else {
+		} else if (err < 0) {
 			printf("Error adding to routing table\n");
 		}
 
@@ -83,9 +157,7 @@ void runicast_timeout(struct runicast_conn *c, const linkaddr_t *to, uint8_t ret
 
 }
 
-// Reliable unicast connection
 const struct runicast_callbacks runicast_callbacks = {runicast_recv, runicast_sent, runicast_timeout};
-static struct runicast_conn runicast;
 
 
 //////////////////////////////
@@ -114,59 +186,7 @@ void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) {
 
 }
 
-// Broadcast connection
 const struct broadcast_callbacks broadcast_call = {broadcast_recv};
-static struct broadcast_conn broadcast;
-
-
-
-/////////////////////////
-///  CALLBACK TIMERS  ///
-/////////////////////////
-
-// Callback timer to send information messages
-struct ctimer send_timer;
-
-// Callback timer to delete parent or children
-struct ctimer delete_timer;
-
-// Callback timer to print routing table
-struct ctimer print_timer;
-
-/**
- * Callback function that will send the appropriate message when ctimer has expired.
- */
-void send_callback(void *ptr) {
-	// Reset the timer
-	ctimer_reset(&send_timer);
-
-	// Send the appropriate message
-	send_DIO(&broadcast, &mote);
-
-}
-
-/**
- * Callback function that will delete.
- */
-void delete_callback(void *ptr) {
-	// Reset the timer
-	ctimer_reset(&delete_timer);
-
-	// Delete children that haven't sent messages since a long time
-	hashmap_delete_timeout(mote.routing_table, clock_seconds(), TIMEOUT_CHILD);
-}
-
-/**
- * Callback function that will print the routing table.
- */
-void print_callback(void *ptr) {
-	// Reset the timer
-	ctimer_reset(&print_timer);
-
-	// Print the routing table
-	hashmap_print(mote.routing_table);
-
-}
 
 
 
@@ -183,6 +203,7 @@ PROCESS_THREAD(root_mote, ev, data) {
 
 	if (!created) {
 		init_root(&mote);
+		trickle_init(&t_timer);
 		created = 1;
 	}
 
@@ -195,14 +216,13 @@ PROCESS_THREAD(root_mote, ev, data) {
 
 	while(1) {
 
-		ctimer_set(&send_timer, CLOCK_SECOND*SEND_PERIOD + random_rand() % CLOCK_SECOND,
+		// Start all the timers
+		ctimer_set(&send_timer, trickle_random(&t_timer),
 			send_callback, NULL);
-
-		ctimer_set(&delete_timer, CLOCK_SECOND*DELETE_PERIOD  + random_rand() % CLOCK_SECOND,
-			delete_callback, NULL);
-
-		ctimer_set(&print_timer, CLOCK_SECOND*5 + random_rand() % CLOCK_SECOND,
-			print_callback, NULL);
+		ctimer_set(&children_timer, CLOCK_SECOND*TIMEOUT - random_rand() % (CLOCK_SECOND*5),
+			children_callback, NULL);
+		/*ctimer_set(&print_timer, CLOCK_SECOND*5 + random_rand() % CLOCK_SECOND,
+			print_callback, NULL);*/
 
 		// Wait for the ctimer to trigger
 		PROCESS_YIELD();

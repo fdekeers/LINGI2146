@@ -22,10 +22,6 @@
 // Infinite rank constant
 #define INFINITE_RANK 255
 
-// Constant for periodicity of messages [sec]
-#define SEND_PERIOD    3
-#define DELETE_PERIOD  10
-
 // Constants for runicast sending functions
 #define SENT       1
 #define NOT_SENT  -1
@@ -33,7 +29,7 @@
 
 // Return values for choose_parent function
 #define PARENT_NOT_CHANGED  0
-#define PARENT_INIT         1
+#define PARENT_NEW          1
 #define PARENT_CHANGED      2
 
 // Threshold to change parent (in dB)
@@ -45,8 +41,6 @@
 // Maximum number of children for each mote
 #define MAX_NB_CHILDREN 10
 
-// Timeout [sec] to know when to forget a child
-#define TIMEOUT_CHILD 10
 
 // Values for the different types of messages
 const uint8_t DIS;
@@ -147,6 +141,12 @@ void init_root(mote_t *mote);
 void init_parent(mote_t *mote, const linkaddr_t *parent_addr, uint8_t parent_rank, signed char rss);
 
 /**
+ * Updates the attributes of the parent of a mote.
+ * Returns 1 if the rank of the parent has changed, 0 if it hasn't changed.
+ */
+uint8_t update_parent(mote_t *mote, uint8_t parent_rank, signed char rss);
+
+/**
  * Changes the parent of a mote.
  */
 void change_parent(mote_t *mote, const linkaddr_t *parent_addr, uint8_t parent_rank, signed char rss);
@@ -186,7 +186,7 @@ uint8_t choose_parent(mote_t *mote, const linkaddr_t* parent_addr, uint8_t paren
  * Updates the timestamp of node having addr child_addr to the given time or adds the node if it didn't exist
  * Prints an error if a node should be added but no more space is available
  */
-void update_timestamp(mote_t *mote, unsigned long time, linkaddr_t child_addr);
+//void update_timestamp(mote_t *mote, unsigned long time, linkaddr_t child_addr);
 
 /**
  * Sends a DLT message to the parent of this node, with child_addr as address of the child to remove
@@ -197,12 +197,7 @@ void update_timestamp(mote_t *mote, unsigned long time, linkaddr_t child_addr);
 /**
  * Removes children that did not send a message since a long time
  */
-void remove_unresponding_children(mote_t *mote, unsigned long current_time);
-
-/**
- * Sends a DATA message, containing a random value, to the parent of the mote.
- */
-void send_DATA(struct runicast_conn *conn, mote_t *mote);
+//void remove_unresponding_children(mote_t *mote, unsigned long current_time);
 
 /**
  * Sends a DATA message, containing a random value, to the parent of the mote.
@@ -213,3 +208,8 @@ void send_DATA(struct runicast_conn *conn, mote_t *mote);
  * Forwards a DATA message to the parent of the mote.
  */
 void forward_DATA(struct runicast_conn *conn, DATA_message_t *message, mote_t *mote);
+
+/**
+ * Forwards an OPEN message to the next hop mote on the path to the destination.
+ */
+void forward_OPEN(struct runicast_conn *conn, OPEN_message_t *message, mote_t *mote);

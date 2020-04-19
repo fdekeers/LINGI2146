@@ -5,8 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <time.h>
-
+#include "contiki.h"
+#include "random.h"
 
 
 ///////////////////
@@ -25,8 +25,6 @@
 
 typedef struct trickle_timer {
 	uint8_t T;
-	uint8_t c;
-	uint8_t k;
 } trickle_timer_t;
 
 
@@ -41,19 +39,14 @@ typedef struct trickle_timer {
 void trickle_init(trickle_timer_t* timer);
 
 /**
- * Returns a random float between a and b.
- */
-float random_float(float a, float b);
-
-/**
  * Returns a random duration between T/2 and T.
  */
-float random_delay(trickle_timer_t* timer);
+uint16_t trickle_random(trickle_timer_t* timer);
 
 /**
  * Updates the value of T, by doubling it (up to T_MAX)
  */
-void update_T(trickle_timer_t* timer);
+void trickle_update(trickle_timer_t* timer);
 
 /**
  * Resets the timer, by setting T to T_MIN, and c to 0.
