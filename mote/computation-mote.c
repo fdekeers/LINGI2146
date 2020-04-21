@@ -67,7 +67,7 @@ int indexFind(linkaddr_t addr, unsigned long curr_time) {
 		else if (linkaddr_cmp(&addr, &(computed_motes[i].addr))) {
 			return i;
 		}
-		if (computed_motes[i].in_use && curr_time > computed_motes[i].timestamp+TIMEOUT_CHILD) {
+		if (computed_motes[i].in_use && curr_time > computed_motes[i].timestamp+TIMEOUT) {
 			// remove nodes that timed out
 			computed_motes[i].in_use = 0;
 			if (index == COMPUTED_BUFFER_FULL) {
@@ -179,12 +179,12 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 				next_hop.u8[0], next_hop.u8[1]);*/
 			forward_DAO(conn, &mote, child_addr);
 
-			if (linkaddr_cmp(&child_addr, from)) {
+			/*if (linkaddr_cmp(&child_addr, from)) {
 				// linkaddr_cmp returns non-zero if addresses are equal
 
 				// update timestamp of the child now or add the new child
 				update_timestamp(&mote, clock_seconds(), child_addr);
-			}
+			}*/
 			
 		} else {
 			printf("Error adding to routing table\n");
@@ -263,7 +263,7 @@ void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) {
 		} else {
 			// DIO message received from other mote
 			uint8_t code = choose_parent(&mote, from, message->rank, rss);
-		    if (code == PARENT_INIT) {
+		    if (code == PARENT_NEW) {
 		    	// If parent was initialized, send DAO message to new parent
 		    	send_DAO(&runicast, &mote);
 		    } else if (code == PARENT_CHANGED) {
@@ -335,7 +335,7 @@ void delete_callback(void *ptr) {
 	info_from_parent = 0;
 
 	// Delete children that haven't sent messages since a long time
-	hashmap_delete_timeout(mote.routing_table, clock_seconds(), TIMEOUT_CHILD);
+	hashmap_delete_timeout(mote.routing_table);
 }
 
 /**
@@ -390,10 +390,10 @@ PROCESS_THREAD(sensor_mote, ev, data) {
 
 	while (1) {
 
-		ctimer_set(&send_timer, CLOCK_SECOND*SEND_PERIOD + random_rand() % CLOCK_SECOND,
+		ctimer_set(&send_timer, CLOCK_SECOND*3 + random_rand() % CLOCK_SECOND,
 			send_callback, NULL);
 
-		ctimer_set(&delete_timer, CLOCK_SECOND*DELETE_PERIOD  + random_rand() % CLOCK_SECOND,
+		ctimer_set(&delete_timer, CLOCK_SECOND*10 + random_rand() % CLOCK_SECOND,
 			delete_callback, NULL);
 
 		ctimer_set(&print_timer, CLOCK_SECOND*5 + random_rand() % CLOCK_SECOND,

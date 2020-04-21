@@ -196,7 +196,7 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 		linkaddr_t child_addr = message->src_addr;
 
 		int err = hashmap_put(mote.routing_table, child_addr, *from);
-		if (err >= 0) {
+		if (err == MAP_NEW || err == MAP_UPDATE) {
 
 			// Forward DAO message to parent
 			forward_DAO(conn, &mote, child_addr);

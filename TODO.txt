@@ -42,9 +42,9 @@ OTHER NODES
 - Envoie un DAO message à ce parent, pour lui dire "Hey, je suis désormais ton enfant"
 
 
-A implémenter maintenant :
-
+TODO :
 	- Hashmap : lock ?
+	- UPDATE COMPUTATION MOTE
 
 
 CLOCK_SECOND = 128
