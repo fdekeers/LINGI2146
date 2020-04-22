@@ -41,11 +41,15 @@ OTHER NODES
 - Choisit un (un seul !) parent, en fonction de la qualité de la transmission
 - Envoie un DAO message à ce parent, pour lui dire "Hey, je suis désormais ton enfant"
 
+CLOCK_SECOND = 128
+	-> 1 second = 128 ticks
+
+TIMING
+- Envoi périodique des messages de routage : trickle timer up to 15 sec
+- Envoi de data toutes les 60 sec
+- Timeout pour les enfants/parents : 50 sec 
+- De cette manière, on peut perdre 3 paquets de contrôle avant de virer un enfant/parent
+
 
 TODO :
 	- Hashmap : lock ?
-	- UPDATE COMPUTATION MOTE
-
-
-CLOCK_SECOND = 128
-	-> 1 second = 128 ticks
