@@ -45,10 +45,10 @@ CLOCK_SECOND = 128
 	-> 1 second = 128 ticks
 
 TIMING
-- Envoi périodique des messages de routage : trickle timer up to 15 sec
+- Envoi périodique des messages de routage : trickle timer up to 120 sec
 - Envoi de data toutes les 60 sec
-- Timeout pour les enfants/parents : 50 sec 
-- De cette manière, on peut perdre 3 paquets de contrôle avant de virer un enfant/parent
+- Timeout pour les enfants/parents : 180 sec 
+- De cette manière, on peut perdre 4 paquets de contrôle avant de virer un enfant/parent
 
 
 TODO :

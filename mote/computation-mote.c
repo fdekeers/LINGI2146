@@ -378,6 +378,7 @@ void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) {
 				ctimer_set(&parent_timer, CLOCK_SECOND*TIMEOUT - random_rand() % (CLOCK_SECOND*5),
 					parent_callback, NULL);
 				if (update_parent(&mote, message->rank, rss)) {
+					send_DIO(conn, &mote);
 					// Rank of parent has changed, reset trickle timer
 					reset_timers(&t_timer);
 				}

@@ -123,7 +123,7 @@ void parent_callback(void *ptr) {
 	// Restart the timer with a new random value
 	ctimer_set(&parent_timer, CLOCK_SECOND*TIMEOUT - random_rand() % (CLOCK_SECOND*5),
 		parent_callback, NULL);
-	
+
 }
 
 /**
@@ -214,7 +214,7 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 					update_timestamp(&mote, time, child_addr);
 				}*/
 			}
-			
+
 		} else {
 			printf("Error adding to routing table\n");
 		}
@@ -278,7 +278,7 @@ void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) {
 	uint8_t type = *data;
 
 	if (type == DIS) { // DIS message received
-		
+
 		//printf("DIS packet received.\n");
 		// If the mote is already in a DODAG, send DIO packet
 		if (mote.in_dodag) {
@@ -301,6 +301,7 @@ void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) {
 					parent_callback, NULL);
 				if (update_parent(&mote, message->rank, rss)) {
 					// Rank of parent has changed, reset trickle timer
+					send_DIO(conn, &mote);
 					reset_timers(&t_timer);
 				}
 			}
@@ -373,7 +374,7 @@ PROCESS_THREAD(sensor_mote, ev, data) {
 		// Start the sending timer
 		ctimer_set(&send_timer, trickle_random(&t_timer),
 			send_callback, NULL);
-		
+
 		/*ctimer_set(&print_timer, CLOCK_SECOND*5 + random_rand() % CLOCK_SECOND,
 			print_callback, NULL);*/
 
