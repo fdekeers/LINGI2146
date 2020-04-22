@@ -257,6 +257,7 @@ void runicast_timeout(struct runicast_conn *c, const linkaddr_t *to, uint8_t ret
 	printf("Runicast packet timed out.\n");
 }
 
+// Runicast callback functions
 const struct runicast_callbacks runicast_callbacks = {runicast_recv, runicast_sent, runicast_timeout};
 
 
@@ -338,6 +339,7 @@ void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) {
 
 }
 
+// Broadcast callback function
 const struct broadcast_callbacks broadcast_call = {broadcast_recv};
 
 

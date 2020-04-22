@@ -1,23 +1,29 @@
-import random
+from Packet import *
+import socket
 import sys
-from time import sleep
 
 
 class Server:
-    def __init__(self, threshold: int = 5):
+    def __init__(self, threshold: float = 5, router_ip: str = "127.0.0.1", router_port: int = 8014):
         self.values = {}
         self.threshold = threshold
+        self.router_ip = router_ip
+        self.router_port = router_port
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.connect((self.router_ip, self.router_port))
+        self.sock.send("Connecting...".encode())
 
-    def handle_received_data(self, node: int, value: float):
-        values_list = self.values.get(node, [])
+    def handle_received_data(self, packet: DataPacket):
+        values_list = self.values.get(packet.address, [])
         if len(values_list) >= 30:
             values_list = values_list[1:]
 
-        values_list.append(value)
-        self.values[node] = values_list
+        values_list.append(packet.data)
+        self.values[packet.address] = values_list
 
-        if len(values_list) > 10 and self.compute_slope(node) > self.threshold:
-            self.send_open_valve(node)
+        if len(values_list) > 10 and self.compute_slope(packet.address) > self.threshold:
+            print(" Sending OPEN message to node [{node}]".format(node=packet.address), end="")
+            self.send_packet(OpenPacket(packet.address))
 
     def compute_slope(self, node: int):
         values = self.values.get(node, [])
@@ -25,8 +31,14 @@ class Server:
         print(" Slope", slope, end="")
         return (int(slope * 100)) / 100
 
-    def send_open_valve(self, node: int):
-        print("Sending OPEN message to node [{node}]".format(node=node))
+    def send_packet(self, packet: Packet):
+        self.sock.send(packet.encode())
+
+    def receive_packet(self):
+        data = self.sock.recv(10)
+        packet: DataPacket = PackFactory.parse_packet(data)
+        print("\nReceived:", packet.address, packet.data, end="")
+        self.handle_received_data(packet)
 
 
 def least_squares_slope(y: list):
@@ -45,13 +57,21 @@ def least_squares_slope(y: list):
 
 if __name__ == '__main__':
     threshold = 5
-    if len(sys.argv) > 1:
-        threshold = sys.argv[1]
+    try:
+        router_ip = sys.argv[1]
+        router_port = int(sys.argv[2])
+    except:
+        print("The server takes at least 2 parameters:")
+        print("[Mandatory]\tRouter IP [string] (IPv6 address)")
+        print("[Mandatory]\tRouter PORT [int] (UDP port)")
+        print("[Optional]\tSlope threshold [float] (minimum slope to trigger valves opening)")
+        exit(-1)
 
-    server = Server(int(threshold))
+    if len(sys.argv) > 3:
+        # This threshold corresponds to the slope threshold
+        threshold = sys.argv[3]
+
+    server = Server(float(threshold))
     i = 0
     while True:
-        sleep(random.random()/10)
-        print("\n", i, "Sending data", end="")
-        server.handle_received_data(random.randint(0, 3), i)
-        i += 1
+        server.receive_packet()
