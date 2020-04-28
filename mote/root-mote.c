@@ -237,10 +237,15 @@ PROCESS_THREAD(server_communication, ev, data) {
     while(1) {
         PROCESS_YIELD();
         if(ev == serial_line_event_message) {
-            char *strData = (char *)data;
-            printf("Received line: %s\n", strData);
-
-            printf("Type: %c", strData[0]);
+            char *str_data = (char *)data;
+            printf("Received line: %s\n", str_data);
+            uint8_t type = atoi(strtok(str_data, "/"));
+            if (type == OPEN){
+                uint16_t dst_addr = atoi(strtok(NULL, "/"));
+                printf("Message type %i for node %i\n", type, dst_addr);
+            } else {
+                printf("Unexpected message from server\n");
+            }
 
         }
     }
