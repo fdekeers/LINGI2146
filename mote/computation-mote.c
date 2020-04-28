@@ -301,9 +301,14 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 		}
 
 	} else if (type == DATA) {
-		// DATA packet, forward towards root
 		DATA_message_t* message = (DATA_message_t*) packetbuf_dataptr();
-		forward_DATA(conn, message, &mote);
+
+		/*
+		 * TODO : checks if the source is already in the list of children
+		 * If yes, or if there is room for it, add the data to its last 30 values
+		 * If the source mote isn't in the children list, and there is no room left,
+		 * forward the message towards root.
+		 */
 
 	} else if (type == OPEN) {
 		// OPEN packet, forward towards destination

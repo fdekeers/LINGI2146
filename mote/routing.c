@@ -370,10 +370,30 @@ void forward_DATA(struct runicast_conn *conn, DATA_message_t *message, mote_t *m
 }
 
 /**
+ * Sends an OPEN message to the sensor mote with address dst_addr, by sending it
+ * to the next-hop address in the routing table.
+ */
+void send_OPEN(struct runicast_conn *conn, linkaddr_t dst_addr, mote_t *mote) {
+	// Address of the next-hop mote towards destination
+	linkaddr_t next_hop;
+	if (hashmap_get(mote->routing_table, dst_addr, &next_hop) == MAP_OK) {
+		// Node is correctly in the routing table
+		OPEN_message_t* message = (OPEN_message_t*) malloc(OPEN_size);
+		message->type = OPEN;
+		message->dst_addr = dst_addr;
+		packetbuf_copyfrom((void*) message, OPEN_size);
+		runicast_send(conn, &next_hop, MAX_RETRANSMISSIONS);
+	} else {
+		// Destination mote wasn't present in routing table
+		printf("Mote not in routing table.\n");
+	}
+}
+
+/**
  * Forwards an OPEN message to the next hop mote on the path to the destination.
  */
 void forward_OPEN(struct runicast_conn *conn, OPEN_message_t *message, mote_t *mote) {
-	// Address of the next hop towards destination
+	// Address of the next-hop mote towards destination
 	linkaddr_t next_hop;
 	if (hashmap_get(mote->routing_table, message->dst_addr, &next_hop) == MAP_OK) {
 		// Forward to next_hop

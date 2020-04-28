@@ -52,4 +52,4 @@ TIMING
 
 
 TODO :
-	- Hashmap : lock ?
+	- Update computation mote : receiving of DATA messages, and sending of OPEN messages.
