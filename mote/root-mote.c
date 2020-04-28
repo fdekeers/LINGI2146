@@ -242,8 +242,9 @@ PROCESS_THREAD(server_communication, ev, data) {
             if (type == OPEN){
                 uint16_t dst_addr = atoi(strtok(NULL, "/"));
                 linkaddr_t addr;
-                addr.u8[0] = (unsigned char) (dst_addr >> 8);
-                addr.u8[1] = (unsigned char) (dst_addr & 0xFF);
+                addr.u16 = dst_addr;
+                //addr.u8[0] = (unsigned char) (dst_addr & 0xFF);
+                //addr.u8[1] = (unsigned char) (dst_addr >> 8);
                 printf("Message type %i for node %i\n", type, dst_addr);
                 send_OPEN(&runicast, addr, &mote);
             } else {
