@@ -40,7 +40,6 @@ class Server:
             data = self.sock.recv(1)
         packet = PackFactory.parse_packet(buf)
         if packet is not None:
-            print()
             print("Received data: \tADDR = {}\tDATA = {}".format(packet.address, packet.data))
             self.handle_received_data(packet)
 

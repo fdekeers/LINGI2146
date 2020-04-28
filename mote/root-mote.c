@@ -139,7 +139,6 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 
 		DATA_message_t* message = (DATA_message_t*) packetbuf_dataptr();
 		printf("%u/%u/%u\n", message->type, message->src_addr, message->data);
-
 	} else {
 		printf("Unknown runicast message received.\n");
 	}
@@ -242,11 +241,14 @@ PROCESS_THREAD(server_communication, ev, data) {
             uint8_t type = atoi(strtok(str_data, "/"));
             if (type == OPEN){
                 uint16_t dst_addr = atoi(strtok(NULL, "/"));
+                linkaddr_t addr;
+                addr.u8[0] = (unsigned char) (dst_addr >> 8);
+                addr.u8[1] = (unsigned char) (dst_addr & 0xFF);
                 printf("Message type %i for node %i\n", type, dst_addr);
+                send_OPEN(&runicast, addr, &mote);
             } else {
                 printf("Unexpected message from server\n");
             }
-
         }
     }
     PROCESS_END();
