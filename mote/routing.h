@@ -212,6 +212,12 @@ void send_DATA(struct runicast_conn *conn, mote_t *mote);
 void forward_DATA(struct runicast_conn *conn, DATA_message_t *message, mote_t *mote);
 
 /**
+ * Sends an OPEN message to the sensor mote with address dst_addr, by sending it
+ * to the next-hop address in the routing table.
+ */
+void send_OPEN(struct runicast_conn *conn, linkaddr_t dst_addr, mote_t *mote);
+
+/**
  * Forwards an OPEN message to the next hop mote on the path to the destination.
  */
 void forward_OPEN(struct runicast_conn *conn, OPEN_message_t *message, mote_t *mote);
