@@ -1,7 +1,9 @@
 test/
 mote/obj_z1
+mote/obj_cooja/
 mote/*.a
 mote/*.map
 mote/*.z1
+mote/*.cooja
 /server/.idea/
 server/__pycache__/

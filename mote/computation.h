@@ -45,16 +45,16 @@ typedef struct computed_mote {
  * Finds the index where the mote is located or could be added or COMPUTED_BUFFER_FULL if
  * the mote wasn't present and the buffer is full. It also deletes nodes that timed out
  */
-int indexFind(linkaddr_t addr, unsigned long curr_time);
+int indexFind(linkaddr_t addr, computed_mote_t computed_motes[], unsigned long curr_time);
 
 /**
  * Returns the computed slope. If first_free_value_index and first_value_index are equal,
  * we consider that the buffer is of the maximum size. This function shouldn't be called
  * on an empty buffer
  */
-int slope_value(int index_mote);
+int slope_value(int index_mote, computed_mote_t computed_motes[]);
 
 /**
  * Adds the information received from the mote and returns whether the valve should be opened or not
  */
-int add_and_check_valve(linkaddr_t addr, double quality_air_value);
+int add_and_check_valve(linkaddr_t addr, computed_mote_t computed_motes[], double quality_air_value);

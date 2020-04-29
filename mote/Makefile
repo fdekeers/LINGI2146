@@ -1,5 +1,5 @@
-CONTIKI_PROJECT = sensor-mote root-mote
-PROJECT_SOURCEFILES = routing.c hashmap.c
+CONTIKI_PROJECT = sensor-mote root-mote computation-mote
+PROJECT_SOURCEFILES = computation.c routing.c hashmap.c trickle-timer.c 
 
 all: $(CONTIKI_PROJECT)
 

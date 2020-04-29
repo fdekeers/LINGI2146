@@ -13,7 +13,7 @@
  * Finds the index where the mote is located or could be added or COMPUTED_BUFFER_FULL if
  * the mote wasn't present and the buffer is full. It also deletes nodes that timed out
  */
-int indexFind(linkaddr_t addr, unsigned long curr_time) {
+int indexFind(linkaddr_t addr, computed_mote_t computed_motes[], unsigned long curr_time) {
 	int index = COMPUTED_BUFFER_FULL;
 	int i;
 	for (i = 0; i < MAX_NB_COMPUTED; i++) {
@@ -40,7 +40,7 @@ int indexFind(linkaddr_t addr, unsigned long curr_time) {
  * we consider that the buffer is of the maximum size. This function shouldn't be called
  * on an empty buffer
  */
-int slope_value(int index_mote) {
+int slope_value(int index_mote, computed_mote_t computed_motes[]) {
 	computed_mote_t *elem = &(computed_motes[index_mote]);
 	int nb_values = ((elem->first_free_value_index+MAX_NB_VALUES) - elem->first_value_index) % MAX_NB_VALUES;
 	if (nb_values == 0)
@@ -64,9 +64,9 @@ int slope_value(int index_mote) {
 /**
  * Adds the information received from the mote and returns whether the valve should be opened or not
  */
-int add_and_check_valve(linkaddr_t addr, double quality_air_value) {
+int add_and_check_valve(linkaddr_t addr, computed_mote_t computed_motes[], double quality_air_value) {
 	unsigned long time = clock_seconds();
-	int index_mote = indexFind(addr, time);
+	int index_mote = indexFind(addr, computed_motes, time);
 	if (index_mote == COMPUTED_BUFFER_FULL) {
 		printf("Couldn't add mote %u.%u in the computation buffer\n", addr.u8[0], addr.u8[1]);
 		return CANNOT_ADD_MOTE;
@@ -97,7 +97,7 @@ int add_and_check_valve(linkaddr_t addr, double quality_air_value) {
 		// enough values to compute whether we should open the valve
 		enough_values = 1;
 	}
-	if (enough_values && slope_value(index_mote) <= SLOPE_THRESHOLD) {
+	if (enough_values && slope_value(index_mote, computed_motes) <= SLOPE_THRESHOLD) {
 		// TODO : > or < ? normally air quality should be high if quality is good so : slope < SLOPE_THRESHOLD with negative constant
 		return OPEN_VALVE;
 	}
