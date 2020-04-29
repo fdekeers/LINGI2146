@@ -6,36 +6,12 @@
 #include "net/rime/rime.h"
 #include "dev/leds.h"
 
-#include "routing.h"
+#include "computation.h"
 #include "trickle-timer.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include "random.h"
-
-///////////////////
-///  CONSTANTS  ///
-///////////////////
-
-#define COMPUTED_BUFFER_FULL -1
-#define OPEN_VALVE 1
-#define CLOSE_VALVE 2
-#define CANNOT_ADD_MOTE 3
-#define MIN_NB_VALUES_COMPUTE 10 // minimum values needed to do the computation
-#define MAX_NB_VALUES 30 // maximum number of values about the mote
-#define MAX_NB_COMPUTED 5 // this node can compute the needed values for only this number of nodes
-#define SLOPE_THRESHOLD -30 // definition of the threshold (in %) for which we should open valves to improve air quality
-
-typedef struct computed_mote {
-	linkaddr_t addr;
-	unsigned long timestamp;
-	uint8_t in_use;
-	double values[MAX_NB_VALUES];
-	uint8_t first_value_index;
-	uint8_t first_free_value_index;
-	//size is not needed if when created, we add an element directly
-	// using this, if the 2 indexes are equal, it will mean that the buffer is full-
-} computed_mote_t;
 
 // Represents the attributes of this mote
 mote_t mote;
