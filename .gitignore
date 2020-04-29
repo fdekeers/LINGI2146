@@ -3,3 +3,5 @@ mote/obj_z1
 mote/*.a
 mote/*.map
 mote/*.z1
+/server/.idea/
+server/__pycache__/

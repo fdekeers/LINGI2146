@@ -1,5 +1,5 @@
 Se connecter au dossier de la VM en SSH :
-sshfs user@192.168.1.31:/home/user /home/framinem/InstantContiki/
+sshfs user@192.168.1.13:/home/user /home/framinem/InstantContiki/
 
 On peut utiliser les Rime modules suivants (contiki/core/net/rime) :
 - unicast.h
@@ -52,4 +52,4 @@ TIMING
 
 
 TODO :
-	- Update computation mote : receiving of DATA messages, and sending of OPEN messages.
+	- Changer double en uint8_t (16 ?) dans computation_mote.add_and_check_valve

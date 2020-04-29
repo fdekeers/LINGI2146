@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "random.h"
+#include "serial-line.h"
 
 
 // Represents the attributes of this mote
@@ -129,7 +130,7 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 				unsigned long time = clock_seconds();
 				update_timestamp(&mote, time, child_addr);
 			}*/
-			
+
 		} else if (err < 0) {
 			printf("Error adding to routing table\n");
 		}
@@ -137,11 +138,7 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 	} else if (type == DATA) {
 
 		DATA_message_t* message = (DATA_message_t*) packetbuf_dataptr();
-		printf("Received data packet.\n");
-		printf("Received data packet with value %u\n", message->data);
-
-		// TODO : Send the data to the server.
-
+		printf("%u/%u/%u\n", message->type, message->src_addr, message->data);
 	} else {
 		printf("Unknown runicast message received.\n");
 	}
@@ -196,8 +193,9 @@ const struct broadcast_callbacks broadcast_call = {broadcast_recv};
 
 // Create and start the process
 PROCESS(root_mote, "Root mote");
-AUTOSTART_PROCESSES(&root_mote);
+PROCESS(server_communication, "Server communication");
 
+AUTOSTART_PROCESSES(&root_mote, &server_communication);
 
 PROCESS_THREAD(root_mote, ev, data) {
 
@@ -230,5 +228,29 @@ PROCESS_THREAD(root_mote, ev, data) {
 	}
 
 	PROCESS_END();
+}
 
+PROCESS_THREAD(server_communication, ev, data) {
+    PROCESS_BEGIN();
+
+    while(1) {
+        PROCESS_YIELD();
+        if(ev == serial_line_event_message) {
+            char *str_data = (char *)data;
+            printf("Received line: %s\n", str_data);
+            uint8_t type = atoi(strtok(str_data, "/"));
+            if (type == OPEN){
+                uint16_t dst_addr = atoi(strtok(NULL, "/"));
+                linkaddr_t addr;
+                addr.u16 = dst_addr;
+                //addr.u8[0] = (unsigned char) (dst_addr & 0xFF);
+                //addr.u8[1] = (unsigned char) (dst_addr >> 8);
+                printf("Message type %i for node %i\n", type, dst_addr);
+                send_OPEN(&runicast, addr, &mote);
+            } else {
+                printf("Unexpected message from server\n");
+            }
+        }
+    }
+    PROCESS_END();
 }

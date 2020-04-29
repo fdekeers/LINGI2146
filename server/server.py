@@ -4,16 +4,15 @@ import sys
 
 
 class Server:
-    def __init__(self, threshold: float = 5, router_ip: str = "127.0.0.1", router_port: int = 8014):
+    def __init__(self, threshold=5, router_ip="127.0.0.1", router_port=60001):
         self.values = {}
         self.threshold = threshold
         self.router_ip = router_ip
         self.router_port = router_port
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((self.router_ip, self.router_port))
-        self.sock.send("Connecting...".encode())
 
-    def handle_received_data(self, packet: DataPacket):
+    def handle_received_data(self, packet):
         values_list = self.values.get(packet.address, [])
         if len(values_list) >= 30:
             values_list = values_list[1:]
@@ -21,27 +20,31 @@ class Server:
         values_list.append(packet.data)
         self.values[packet.address] = values_list
 
-        if len(values_list) > 10 and self.compute_slope(packet.address) > self.threshold:
-            print(" Sending OPEN message to node [{node}]".format(node=packet.address), end="")
+        if len(values_list) > 3 and self.compute_slope(packet.address) > self.threshold:
+            print("Sending OPEN message to node [{node}]".format(node=packet.address))
             self.send_packet(OpenPacket(packet.address))
 
-    def compute_slope(self, node: int):
+    def compute_slope(self, node):
         values = self.values.get(node, [])
         slope = least_squares_slope(values)
-        print(" Slope", slope, end="")
         return (int(slope * 100)) / 100
 
-    def send_packet(self, packet: Packet):
-        self.sock.send(packet.encode())
+    def send_packet(self, packet):
+        self.sock.send(bytes(packet.encode(), "utf-8") + b"\n")
 
     def receive_packet(self):
-        data = self.sock.recv(10)
-        packet: DataPacket = PackFactory.parse_packet(data)
-        print("\nReceived:", packet.address, packet.data, end="")
-        self.handle_received_data(packet)
+        data = self.sock.recv(1)
+        buf = b""
+        while data.decode("utf-8") != "\n":
+            buf += data
+            data = self.sock.recv(1)
+        packet = PackFactory.parse_packet(buf)
+        if packet is not None:
+            print("Received data: \tADDR = {}\tDATA = {}".format(packet.address, packet.data))
+            self.handle_received_data(packet)
 
 
-def least_squares_slope(y: list):
+def least_squares_slope(y):
     n = len(y)
     x = range(n)
     sum_x, sum_y = sum(x), sum(y)
