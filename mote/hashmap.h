@@ -89,7 +89,16 @@ void *my_calloc(int nmemb, int size);
 int hashmap_hash(hashmap_map *m, uint16_t key);
 
 /**
- * Doubles the size of the hashmap, and rehashes all the elements
+ * Fills the new_array of data based on the old_array and modifies the different
+ * elements of the hashmap m accordingly.
+ * Return value : MAP_OK if everything was fine, MAP_OMEM if there is a bug that
+ * 		  should not even be there, or MAP_FULL if we have to rehash
+ */
+int hashmap_fill_rehash(hashmap_map *m, hashmap_element *old_array, int old_table_size, hashmap_element *new_array, int new_table_size);
+
+/**
+ * Changes the size of the hashmap (at least the double + 1, more if multiple
+ * rehashes have to be made) and rehashes all the elements.
  */
 int hashmap_rehash(hashmap_map *m);
 
