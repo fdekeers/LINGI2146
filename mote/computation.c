@@ -46,25 +46,26 @@ int slope_value(int index_mote, computed_mote_t computed_motes[]) {
 	if (nb_values == 0)
 		nb_values = MAX_NB_VALUES; // happens when pointers are the same
 	int x[nb_values];
-	double *y = elem->values;
+	uint16_t *y = (elem->values);
 	int i;
 	double sum_x = 0.0, sum_y = 0.0, sum_xx = 0.0, sum_xy = 0.0;
 	for (i = 0; i < nb_values; i++) {
 		x[i] = i;
 		sum_x += i;
-		float y_i = y[(elem->first_value_index+i)%MAX_NB_VALUES];
+		double y_i = (double) (y[(elem->first_value_index+i)%MAX_NB_VALUES]);
+		// casting to double is not a problem since value <= 500 and value is uint16_t (so no problem, even with the sign)
 		sum_y += y_i;
 		sum_xy = x[i]*y_i;
 		sum_xx = x[i]*x[i];
 	}
-	float slope = (sum_x * sum_y - nb_values * sum_xy) / (sum_x * sum_x - nb_values * sum_xx);
+	double slope = (sum_x * sum_y - nb_values * sum_xy) / (sum_x * sum_x - nb_values * sum_xx);
 	return ((int)(slope*100)) / 100;
 }
 
 /**
  * Adds the information received from the mote and returns whether the valve should be opened or not
  */
-int add_and_check_valve(linkaddr_t addr, computed_mote_t computed_motes[], double quality_air_value) {
+int add_and_check_valve(linkaddr_t addr, computed_mote_t computed_motes[], uint16_t quality_air_value) {
 	unsigned long time = clock_seconds();
 	int index_mote = indexFind(addr, computed_motes, time);
 	if (index_mote == COMPUTED_BUFFER_FULL) {
@@ -97,8 +98,8 @@ int add_and_check_valve(linkaddr_t addr, computed_mote_t computed_motes[], doubl
 		// enough values to compute whether we should open the valve
 		enough_values = 1;
 	}
-	if (enough_values && slope_value(index_mote, computed_motes) <= SLOPE_THRESHOLD) {
-		// TODO : > or < ? normally air quality should be high if quality is good so : slope < SLOPE_THRESHOLD with negative constant
+	if (enough_values && slope_value(index_mote, computed_motes) >= SLOPE_THRESHOLD) {
+		// >= since higher values are worse than lower values
 		return OPEN_VALVE;
 	}
 	return CLOSE_VALVE;

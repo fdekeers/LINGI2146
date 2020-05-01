@@ -180,7 +180,7 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 		// DATA packet, compute if mote is in list or if there is room
 		// Otherwise, forward towards root
 		DATA_message_t* message = (DATA_message_t*) packetbuf_dataptr();
-		int ret = add_and_check_valve(message->src_addr, computed_motes, (double) (message->data));
+		int ret = add_and_check_valve(message->src_addr, computed_motes, message->data);
 		if (ret == OPEN_VALVE) {
 			// Send OPEN message to mote
 			send_OPEN(conn, message->src_addr, &mote);

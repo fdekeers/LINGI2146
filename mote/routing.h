@@ -112,7 +112,7 @@ typedef struct DAO_message {
 typedef struct DATA_message {
 	uint8_t type;
 	linkaddr_t src_addr;
-	uint8_t data;
+	uint16_t data;
 } DATA_message_t;
 
 // Represents a OPEN message, that tells to a mote to open its valve
