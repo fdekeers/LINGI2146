@@ -4,9 +4,11 @@
  * Converts a linkaddr_t to a uint16_t
  */
 uint16_t linkaddr2uint16_t (linkaddr_t x) {
-    uint8_t a = x.u8[0]; uint8_t b = x.u8[1];
-    uint16_t newval = (((uint16_t) a) << b ) | ((uint16_t) a);
-    return newval;
+	return x.u16;
+	/*
+	uint8_t a = x.u8[0]; uint8_t b = x.u8[1];
+	uint16_t newval = (((uint16_t) a) << b ) | ((uint16_t) a);
+	return newval; */
 }
 
 /**
@@ -173,7 +175,7 @@ hashmap_map * hashmap_new() {
  * 		  MAP_UPDATE if an element was updated.
  */
 int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value, unsigned long time, uint8_t isRehashing) {
-	printf("Trying to put node %u.%u. Rehashing : %d\n", key >> 8, key & 0xFF, isRehashing);
+	printf("Trying to put node %u. Rehashing : %d\n", key, isRehashing);
 	if (!isRehashing && DEBUG_MODE) {
 		hashmap_print(m);
 	}
@@ -189,7 +191,7 @@ int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value, unsigned lon
 			return MAP_FULL;
 		}
 		if (hashmap_rehash(m) == MAP_OMEM) {
-			printf("Out of memory when trying to put node %u.%u\n", key >> 8, key & 0xFF);
+			printf("Out of memory when trying to put node %u\n", key);
 			return MAP_OMEM;
 		}
 		index = hashmap_hash(m, key);
@@ -291,7 +293,7 @@ int hashmap_remove_int(hashmap_map *m, uint16_t key) {
 		curr = (curr + 1) % m->table_size;
 	}
 
-	printf("Error : element with key addr %u.%u could not be found and thus wasn't removed\n", key >> 8, key & 0xFF);
+	printf("Error : element with key addr %u could not be found and thus wasn't removed\n", key);
 	/* Data not found */
 	return MAP_MISSING;
 }
@@ -329,8 +331,8 @@ void hashmap_print(hashmap_map *m) {
 	for (i = 0; i < m->table_size; i++) {
 		hashmap_element elem = *(map+i);
 		if (elem.in_use) {
-			printf("index %d : %u.%u; reachable from %u.%u\n",
-				i, elem.key >> 8, elem.key & 0xFF, elem.data.u8[0], elem.data.u8[1]);
+			printf("index %d : %u; reachable from %u\n",
+				i, elem.key, linkaddr2uint16_t(elem.data));
 		}
 	}
 }
@@ -348,7 +350,7 @@ int hashmap_delete_timeout(hashmap_map *m) {
 		if (runner[i].in_use && clock_seconds() > runner[i].time + TIMEOUT) {
 			// entry timeout
 			runner[i].in_use = 0;
-			printf("Node with addr %u.%u timed out -> deleted\n", runner[i].key >> 8, runner[i].key & 0xFF);
+			printf("Node with addr %u timed out -> deleted\n", runner[i].key);
 			ret = 1;
 		}
 	}
