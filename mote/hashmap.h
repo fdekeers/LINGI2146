@@ -23,19 +23,23 @@
  *  CONSTANTS DEFINITION
  * ====================== */
 
-#define MAP_MISSING -3   /* No such element */
-#define MAP_FULL -2 	 /* Hashmap is full */
-#define MAP_OMEM -1 	 /* Out of Memory */
-#define MAP_OK 0 	     /* OK */
-#define MAP_NEW 1        // The added element is new
-#define MAP_UPDATE 2     // The added element was already in the map
+#define MAP_MISSING -3		/* No such element */
+#define MAP_FULL -2		/* Hashmap is full, should NOT be >= 0 */
+#define MAP_OMEM -1		/* Out of Memory */
+#define MAP_OK 0		/* OK */
+#define MAP_NEW 1		/* The added element is new */
+#define MAP_UPDATE 2		/* The added element was already in the map */
 
-#define INITIAL_SIZE (16) // initial size of hashmap
-#define MAX_CHAIN_LENGTH (7) // number of "looks after" for linear probing
+#define INITIAL_SIZE (16)	// initial size of hashmap
+#define MAX_CHAIN_LENGTH (7)	// number of "looks after" for linear probing
 
 // Timeout [sec] to know when to forget a child
 #define TIMEOUT 100
 
+/* Debug mode, enable debug printf */
+#ifndef DEBUG_MODE
+#define DEBUG_MODE 1
+#endif
 
 /* =======================
  *  STRUCTURES DEFINITION
@@ -101,9 +105,11 @@ extern hashmap_map *hashmap_new();
 /**
  * Adds/updates a pointer to the hashmap with some key
  * If the element was already present, the data is overwritten with the new one
- * Return value : MAP_OMEM if out of memory, MAP_OK otherwise
+ * Return value : MAP_OMEM if out of memory, MAP_FULL if rehash has to be called
+ *		  while already called by rehash, MAP_NEW if an element was added,
+ * 		  MAP_UPDATE if an element was updated.
  */
-extern int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value, unsigned long time);
+extern int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value, unsigned long time, uint8_t isRehashing);
 
 /**
  * $arg will point to the element with the given key

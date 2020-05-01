@@ -5,7 +5,7 @@
  */
 uint16_t linkaddr2uint16_t (linkaddr_t x) {
     uint8_t a = x.u8[0]; uint8_t b = x.u8[1];
-    uint16_t newval = (((uint16_t) a) << 8 ) | ((uint16_t) b);
+    uint16_t newval = (((uint16_t) a) << b ) | ((uint16_t) a);
     return newval;
 }
 
@@ -33,10 +33,14 @@ int hashmap_hash(hashmap_map *m, uint16_t key) {
 	int i;
 
 	/* If full, return immediately */
-	if(m->size >= (m->table_size/2)) return MAP_FULL;
+	if(2*m->size >= m->table_size) {
+		if (DEBUG_MODE) printf("Map at least half full, resizing\n");
+		return MAP_FULL;
+	}
 
 	/* Find the best index */
 	curr = key % m->table_size;
+	if (DEBUG_MODE) printf("Best index for key %u is %d\n", key, curr);
 
 	/* Value of index if found */
 	int firstInd = MAP_FULL;
@@ -67,42 +71,80 @@ int hashmap_hash(hashmap_map *m, uint16_t key) {
 /**
  * Doubles the size of the hashmap, and rehashes all the elements
  */
-int hashmap_rehash(hashmap_map *m) {
-	int i;
-	int old_size;
-	hashmap_element* curr;
-
-	/* Setup the new elements */
-	hashmap_element* temp = (hashmap_element *)
-		my_calloc(2 * m->table_size, sizeof(hashmap_element));
-	if(!temp) return MAP_OMEM;
-
+int hashmap_fill_rehash(hashmap_map *m, hashmap_element *old_array, int old_table_size, hashmap_element *new_array, int new_table_size) {
 	/* Update the array */
-	curr = m->data;
-	m->data = temp;
+	m->data = new_array;
 
-	/* Update the size */
-	old_size = m->table_size;
-	m->table_size = 2 * m->table_size;
+	/* Update the sizes */
+	m->table_size = new_table_size;
 	m->size = 0;
 
-	/* Rehash the elements */
-	for(i = 0; i < old_size; i++)
-	{
-        int status;
-        if (curr[i].in_use == 0)
-            continue;
-            
-		status = hashmap_put_int(m, curr[i].key, curr[i].data, curr[i].time);
-		if (status != MAP_OK)
-			return status;
-	}
 
-	free(curr);
+	/* Rehash the elements */
+	int i;
+	for(i = 0; i < old_table_size; i++) {
+		if (DEBUG_MODE) printf("Rehashing, i : %d, old_table_size : %d\n", i, old_table_size);
+		if (old_array[i].in_use == 0)
+		    continue;
+	    	uint8_t isRehashing = 1;
+		int status = hashmap_put_int(m, old_array[i].key, old_array[i].data, old_array[i].time, isRehashing);
+		if (status == MAP_FULL) {
+			// have to rehash for more memory !
+			return status;
+		}
+		if (status == MAP_OMEM) {
+			printf("ERROR : MAP_OMEM in simple rehash, should not happen\n");
+			return MAP_OMEM;
+		}
+	}
 
 	return MAP_OK;
 }
 
+int hashmap_rehash(hashmap_map *m) {
+	if (DEBUG_MODE) {
+		printf("Rehashing hashmap, printing before\n");
+		hashmap_print(m);
+	}
+
+	/* Constants needed for all rehash operations */
+	hashmap_element* curr = m->data; // pointer to old data
+	int old_table_size = m->table_size;
+	int previous_table_size = old_table_size; // size of previous rehash
+
+	int status = MAP_FULL;
+	do {
+		int new_table_size = previous_table_size*2 + 1;
+		/* Setup the new elements */
+		hashmap_element* temp = (hashmap_element *)
+		my_calloc(new_table_size, sizeof(hashmap_element));
+		if(!temp) {
+			printf("MAP_OMEM when tried to alloc %d elements of size %d\n", 2 * m->table_size, sizeof(hashmap_element));
+			return MAP_OMEM;
+		}
+
+		status = hashmap_fill_rehash(m, curr, old_table_size, temp, new_table_size);
+		if (status == MAP_FULL) {
+			free(temp); // we'll have to rehash
+		}
+		previous_table_size = new_table_size;
+	} while (status == MAP_FULL); // have to rehash again
+	
+	if (status == MAP_OMEM) {
+		// should not happen
+		printf("Hashmap rehash encountered MAP_OMEM, not normal\n");
+		return MAP_OMEM;
+	}
+
+
+	free(curr); // free old data
+	if (DEBUG_MODE) {
+		printf("Hashmap rehashed, printing new\n");
+		hashmap_print(m);
+	}
+
+	return MAP_OK;
+}
 /**
  * Returns an empty hashmap, or NULL on failure
  */
@@ -126,18 +168,28 @@ hashmap_map * hashmap_new() {
 /**
  * Adds/updates a pointer to the hashmap with some key
  * If the element was already present, the data is overwritten with the new one
- * Return value : MAP_OMEM if out of memory, MAP_NEW if an element was added,
- * 				  MAP_UPDATE if an element was updated.
+ * Return value : MAP_OMEM if out of memory, MAP_FULL if rehash has to be called
+ *		  while already called by rehash, MAP_NEW if an element was added,
+ * 		  MAP_UPDATE if an element was updated.
  */
-int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value, unsigned long time) {
+int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value, unsigned long time, uint8_t isRehashing) {
+	printf("Trying to put node %u.%u. Rehashing : %d\n", key >> 8, key & 0xFF, isRehashing);
+	if (!isRehashing && DEBUG_MODE) {
+		hashmap_print(m);
+	}
 	int index;
 	int ret = MAP_UPDATE;
 
 	/* Find a place to put our value */
 	index = hashmap_hash(m, key);
 	while(index == MAP_FULL) {
+		if (isRehashing && DEBUG_MODE) {
+			// to be sure we don't call rehash while already in rehash
+			printf("MAP_FULL when already rehashing -> double rehash at least\n");
+			return MAP_FULL;
+		}
 		if (hashmap_rehash(m) == MAP_OMEM) {
-			printf("Out of memory when trying to put node %u.%u\n", key >> 8, key & 0x0F);
+			printf("Out of memory when trying to put node %u.%u\n", key >> 8, key & 0xFF);
 			return MAP_OMEM;
 		}
 		index = hashmap_hash(m, key);
@@ -152,6 +204,7 @@ int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value, unsigned lon
 	m->data[index].data = value;
 	m->data[index].time = time;
 	m->data[index].key = key;
+	printf("Node with key %u key added\n",key);
 
 	return ret;
 
@@ -161,11 +214,12 @@ int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value, unsigned lon
  * Adds a pointer to the hashmap with some key
  * If the element was already present, the data is overwritten with the new one
  * Return value : MAP_OMEM if out of memory, MAP_NEW if an element was added,
- * 				  MAP_UPDATE if an element was updated.
+ * 		  MAP_UPDATE if an element was updated.
  */
 int hashmap_put(hashmap_map *m, linkaddr_t key, linkaddr_t value) {
 	unsigned long time = clock_seconds();
-    return hashmap_put_int(m, linkaddr2uint16_t(key), value, time);
+	uint8_t isRehashing = 0;
+	return hashmap_put_int(m, linkaddr2uint16_t(key), value, time, isRehashing);
 }
 
 /**
@@ -230,13 +284,14 @@ int hashmap_remove_int(hashmap_map *m, uint16_t key) {
 
                 /* Reduce the size */
                 m->size--;
+		printf("Node with key %u was removed from hashmap\n",key);
                 return MAP_OK;
             }
 		}
 		curr = (curr + 1) % m->table_size;
 	}
 
-	printf("Error : element with key addr %u.%u could not be found and thus wasn't removed\n", key >> 8, key & 0x0F);
+	printf("Error : element with key addr %u.%u could not be found and thus wasn't removed\n", key >> 8, key & 0xFF);
 	/* Data not found */
 	return MAP_MISSING;
 }
@@ -268,13 +323,14 @@ int hashmap_length(hashmap_map *m) {
  * Prints the content of the hashmap
  */
 void hashmap_print(hashmap_map *m) {
+	printf("Printing hashmap\n");
 	hashmap_element* map = m->data;
 	int i;
 	for (i = 0; i < m->table_size; i++) {
 		hashmap_element elem = *(map+i);
 		if (elem.in_use) {
-			printf("%u.%u; reachable from %u.%u\n",
-				elem.key >> 8, elem.key & 0x0f, elem.data.u8[0], elem.data.u8[1]);
+			printf("index %d : %u.%u; reachable from %u.%u\n",
+				i, elem.key >> 8, elem.key & 0xFF, elem.data.u8[0], elem.data.u8[1]);
 		}
 	}
 }
@@ -292,7 +348,7 @@ int hashmap_delete_timeout(hashmap_map *m) {
 		if (runner[i].in_use && clock_seconds() > runner[i].time + TIMEOUT) {
 			// entry timeout
 			runner[i].in_use = 0;
-			printf("Node with addr %u.%u timed out -> deleted\n", runner[i].key >> 8, runner[i].key & 0x0f);
+			printf("Node with addr %u.%u timed out -> deleted\n", runner[i].key >> 8, runner[i].key & 0xFF);
 			ret = 1;
 		}
 	}
