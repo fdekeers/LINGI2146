@@ -1,3 +1,5 @@
+import time
+
 DATA_PACKET = 0
 OPEN_PACKET = 1
 
@@ -12,6 +14,7 @@ class Packet:
     def __init__(self, address):
         self.address = address
         self.type = -1
+        self.time = round(time.time())
 
     def encode(self):
         if self.type < 0:
