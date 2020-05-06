@@ -21,6 +21,12 @@ int indexFind(linkaddr_t addr, computed_mote_t computed_motes[], unsigned long c
 			index = i;
 		}
 		else if (linkaddr_cmp(&addr, &(computed_motes[i].addr))) {
+			if (curr_time > computed_motes[i].timestamp+TIMEOUT) {
+				// we have new DATA from this new but he already timed out before
+
+				// -> we reset the number of values to 0
+				computed_motes[i].in_use = 0; // as if it wasn't used before
+			}
 			return i;
 		}
 		if (computed_motes[i].in_use && curr_time > computed_motes[i].timestamp+TIMEOUT) {
