@@ -7,3 +7,4 @@ mote/*.z1
 mote/*.cooja
 /server/.idea/
 server/__pycache__/
+/.idea/
