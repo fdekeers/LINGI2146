@@ -17,7 +17,7 @@ class Server:
         if len(values_list) >= 30:
             values_list = values_list[1:]
 
-        values_list.append(packet.data)
+        values_list.append((packet.time, packet.data))
         self.values[packet.address] = values_list
 
         if len(values_list) > 3 and self.compute_slope(packet.address) > self.threshold:
@@ -40,17 +40,18 @@ class Server:
             data = self.sock.recv(1)
         packet = PackFactory.parse_packet(buf)
         if packet is not None:
-            print("Received data: \tADDR = {}\tDATA = {}".format(packet.address, packet.data))
+            print("Received data: \tADDR = {}\tDATA = {}\tTIME = {}".format(packet.address, packet.data, packet.time))
             self.handle_received_data(packet)
 
 
-def least_squares_slope(y):
-    n = len(y)
-    x = range(n)
+def least_squares_slope(tuples):
+    n = len(tuples)
+    x = [t[0] for t in tuples]
+    y = [t[1] for t in tuples]
     sum_x, sum_y = sum(x), sum(y)
     sum_xy, sum_xx = 0, 0
 
-    for index in x:
+    for index in range(n):
         sum_xy += x[index] * y[index]
         sum_xx += x[index] * x[index]
     slope = (sum_x * sum_y - n * sum_xy) / (sum_x * sum_x - n * sum_xx)
