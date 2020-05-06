@@ -193,9 +193,9 @@ int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value, unsigned lon
 	/* Find a place to put our value */
 	index = hashmap_hash(m, key);
 	while(index == MAP_FULL) {
-		if (isRehashing && DEBUG_MODE) {
+		if (isRehashing) {
 			// to be sure we don't call rehash while already in rehash
-			printf("MAP_FULL when already rehashing -> double rehash at least\n");
+			if (DEBUG_MODE) printf("MAP_FULL when already rehashing -> double rehash at least\n");
 			return MAP_FULL;
 		}
 		if (hashmap_rehash(m) == MAP_OMEM) {
