@@ -183,7 +183,7 @@ hashmap_map * hashmap_new() {
  * 		  MAP_UPDATE if an element was updated.
  */
 int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value, unsigned long time, uint8_t isRehashing) {
-	printf("Trying to put node %u. Rehashing : %d\n", key, isRehashing);
+	//printf("Trying to put node %u. Rehashing : %d\n", key, isRehashing);
 	if (!isRehashing && DEBUG_MODE) {
 		hashmap_print(m);
 	}
@@ -214,7 +214,7 @@ int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value, unsigned lon
 	m->data[index].data = value;
 	m->data[index].time = time;
 	m->data[index].key = key;
-	printf("Node with key %u key added\n",key);
+	//printf("Node with key %u added\n",key);
 
 	return ret;
 

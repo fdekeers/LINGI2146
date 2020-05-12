@@ -322,7 +322,7 @@ void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) {
 					parent_callback, NULL);
 				ctimer_set(&children_timer, CLOCK_SECOND*TIMEOUT - random_rand() % (CLOCK_SECOND*5),
 					children_callback, NULL);
-				ctimer_set(&data_timer, CLOCK_SECOND*DATA_PERIOD,
+				ctimer_set(&data_timer, CLOCK_SECOND*DATA_PERIOD - 5 + random_rand() % (CLOCK_SECOND*10),
 					data_callback, NULL);
 
 		    } else if (code == PARENT_CHANGED) {

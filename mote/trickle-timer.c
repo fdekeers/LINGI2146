@@ -43,5 +43,5 @@ void trickle_update(trickle_timer_t* timer) {
  */
 void trickle_reset(trickle_timer_t* timer) {
 	timer->T = (uint8_t) T_MIN;
-	printf("Trickle timer reset.\n");
+	//printf("Trickle timer reset.\n");
 }
