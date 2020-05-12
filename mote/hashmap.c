@@ -346,7 +346,7 @@ void hashmap_print(hashmap_map *m) {
 }
 
 /**
- * Removes entries that have timed out (based on current time and TIMEOUT_CHILD)
+ * Removes entries that have timed out (based on current time and TIMEOUT_CHILDREN)
  * Design choice : unsigned long overflow is not taken into account since it would wrap up in ~= 135 years
  * Returns 1 if at least one element has been removed, 0 if no element has been removed.
  */
@@ -355,7 +355,7 @@ int hashmap_delete_timeout(hashmap_map *m) {
 	hashmap_element *runner = m->data;
 	int i;
 	for (i = 0; i < m->table_size; i++) {
-		if (runner[i].in_use && clock_seconds() > runner[i].time + TIMEOUT) {
+		if (runner[i].in_use && clock_seconds() > runner[i].time + TIMEOUT_CHILDREN) {
 			// entry timeout
 			runner[i].in_use = 0;
 			printf("Node with addr %u timed out -> deleted\n", runner[i].key);

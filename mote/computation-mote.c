@@ -112,6 +112,8 @@ void stop_timers() {
  * Callback function that will detach from the DODAG if the parent is lost.
  */
 void parent_callback(void *ptr) {
+	// Reset the timer
+	ctimer_reset(&parent_timer);
 
 	// Detach from DODAG only if node was already in DODAG
 	if (mote.in_dodag) {
@@ -120,10 +122,6 @@ void parent_callback(void *ptr) {
 		// Reset sending timers
 		stop_timers();
 	}
-
-	// Restart the timer with a new random value
-	ctimer_set(&parent_timer, CLOCK_SECOND*TIMEOUT - random_rand() % (CLOCK_SECOND*5),
-		parent_callback, NULL);
 	
 }
 
@@ -131,15 +129,13 @@ void parent_callback(void *ptr) {
  * Callback function that will delete unresponsive children from the routing table.
  */
 void children_callback(void *ptr) {
+	// Reset the timer
+	ctimer_reset(&children_timer);
 
 	if (mote.in_dodag && hashmap_delete_timeout(mote.routing_table)) {
 		// Children have been deleted, reset sending timers
 		reset_timers();
 	}
-
-	// Restart the timer with a new random value
-	ctimer_set(&children_timer, CLOCK_SECOND*TIMEOUT - random_rand() % (CLOCK_SECOND*5),
-			children_callback, NULL);
 
 }
 
@@ -273,7 +269,7 @@ void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) {
 				stop_timers();
 			} else { // Update info
 				// Restart timer to delete lost parent
-				ctimer_set(&parent_timer, CLOCK_SECOND*TIMEOUT - random_rand() % (CLOCK_SECOND*5),
+				ctimer_set(&parent_timer, CLOCK_SECOND*TIMEOUT_PARENT,
 					parent_callback, NULL);
 				if (update_parent(&mote, message->rank, rss)) {
 					send_DIO(conn, &mote);
@@ -294,9 +290,9 @@ void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) {
 					send_callback, NULL);
 				ctimer_set(&DAO_timer, trickle_random(&t_timer),
 					DAO_callback, NULL);
-				ctimer_set(&parent_timer, CLOCK_SECOND*TIMEOUT - random_rand() % (CLOCK_SECOND*5),
+				ctimer_set(&parent_timer, CLOCK_SECOND*TIMEOUT_PARENT,
 					parent_callback, NULL);
-				ctimer_set(&children_timer, CLOCK_SECOND*TIMEOUT - random_rand() % (CLOCK_SECOND*5),
+				ctimer_set(&children_timer, CLOCK_SECOND*TIMEOUT_CHILDREN,
 					children_callback, NULL);
 
 		    } else if (code == PARENT_CHANGED) {

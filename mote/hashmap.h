@@ -34,7 +34,7 @@
 #define MAX_CHAIN_LENGTH (7)	// number of "looks after" for linear probing
 
 // Timeout [sec] to know when to forget a child
-#define TIMEOUT 100
+#define TIMEOUT_CHILDREN 150
 
 /* Debug mode, enable debug printf */
 #ifndef DEBUG_MODE

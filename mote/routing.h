@@ -38,8 +38,10 @@
 // Maximum number of retransmissions for reliable unicast transport
 #define MAX_RETRANSMISSIONS 4
 
-// Maximum number of children for each mote
-#define MAX_NB_CHILDREN 10
+#define MAX_NB_CHILDREN 5
+
+// Timeout value to detach from unresponsive parent
+#define TIMEOUT_PARENT 50
 
 
 // Values for the different types of messages

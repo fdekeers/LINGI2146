@@ -14,7 +14,7 @@
 ///////////////////
 
 #define T_MIN  2
-#define T_MAX  30
+#define T_MAX  20
 #define K      4
 
 

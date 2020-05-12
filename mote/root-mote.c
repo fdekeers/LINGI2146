@@ -63,16 +63,14 @@ void send_callback(void *ptr) {
  * Callback function that will delete unresponsive children from the routing table.
  */
 void children_callback(void *ptr) {
+	// Reset the timer
+	ctimer_reset(&children_timer);
 
 	// Delete children that haven't sent messages since a long time
 	if (hashmap_delete_timeout(mote.routing_table)) {
 		// Children have been deleted, reset trickle timer
 		trickle_reset(&t_timer);
 	}
-
-	// Restart the timer with a new random value
-	ctimer_set(&children_timer, CLOCK_SECOND*TIMEOUT - random_rand() % (CLOCK_SECOND*5),
-		children_callback, NULL);
 
 }
 
@@ -218,7 +216,7 @@ PROCESS_THREAD(root_mote, ev, data) {
 		// Start all the timers
 		ctimer_set(&send_timer, trickle_random(&t_timer),
 			send_callback, NULL);
-		ctimer_set(&children_timer, CLOCK_SECOND*TIMEOUT - random_rand() % (CLOCK_SECOND*5),
+		ctimer_set(&children_timer, CLOCK_SECOND*TIMEOUT_CHILDREN,
 			children_callback, NULL);
 		/*ctimer_set(&print_timer, CLOCK_SECOND*5 + random_rand() % CLOCK_SECOND,
 			print_callback, NULL);*/
