@@ -26,9 +26,6 @@ mote_t mote;
 // 1 if the mote has been created. Used to create the mote only once.
 uint8_t created = 0;
 
-// 1 if a message from the parent has been received in the timer interval.
-uint8_t info_from_parent = 0;
-
 // Trickle timer for the periodic messages
 trickle_timer_t t_timer;
 
@@ -65,7 +62,6 @@ struct ctimer data_timer;
 // Callback timer to open the valve
 struct ctimer open_timer;
 
-
 /**
  * Callback function that will send the appropriate message when ctimer has expired.
  */
@@ -98,13 +94,28 @@ void DAO_callback(void *ptr) {
 
 /**
  * Resets the trickle timer and restarts the callback timers that use it.
+ * This function is called when there is a change in the network.
  */
-void reset_timers(trickle_timer_t *timer) {
+void reset_timers() {
 	trickle_reset(&t_timer);
 	ctimer_set(&send_timer, trickle_random(&t_timer),
 		send_callback, NULL);
 	ctimer_set(&DAO_timer, trickle_random(&t_timer),
 		DAO_callback, NULL);
+}
+
+/**
+ * Resets the trickle timer, and stops all timers for events that happen when the mote is in the network.
+ * This function is called when the mote detaches from the network.
+ */
+void stop_timers() {
+	trickle_reset(&t_timer);
+	ctimer_set(&send_timer, trickle_random(&t_timer),
+		send_callback, NULL);
+	ctimer_stop(&DAO_timer);
+	ctimer_stop(&parent_timer);
+	ctimer_stop(&children_timer);
+	ctimer_stop(&data_timer);
 }
 
 /**
@@ -116,8 +127,8 @@ void parent_callback(void *ptr) {
 	if (mote.in_dodag) {
 		// Detach from DODAG
 		detach(&mote);
-		// Reset sending timers
-		reset_timers(&t_timer);
+		// Reset and stop timers
+		stop_timers();
 	}
 
 	// Restart the timer with a new random value
@@ -133,7 +144,7 @@ void children_callback(void *ptr) {
 
 	if (mote.in_dodag && hashmap_delete_timeout(mote.routing_table)) {
 		// Children have been deleted, reset sending timers
-		reset_timers(&t_timer);
+		reset_timers();
 	}
 
 	// Restart the timer with a new random value
@@ -156,13 +167,14 @@ void print_callback(void *ptr) {
  * Callback function that will send a data message to the parent.
  */
 void data_callback(void *ptr) {
-	// Reset the timer
-	ctimer_reset(&data_timer);
-
 	// Send the data to parent if mote is in DODAG
 	if (mote.in_dodag) {
 		send_DATA(&runicast, &mote);
 	}
+
+	// Restart the timer with a new random value
+	ctimer_set(&data_timer, CLOCK_SECOND*DATA_PERIOD - 5 + random_rand() % (CLOCK_SECOND*10),
+			data_callback, NULL);
 }
 
 /**
@@ -204,7 +216,7 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 			if (err == MAP_NEW) { // A new child was added to the routing table
 				// Reset timers
 				printf("New child added\n");
-				reset_timers(&t_timer);
+				reset_timers();
 
 				/*if (linkaddr_cmp(&child_addr, from)) {
 					// linkaddr_cmp returns non-zero if addresses are equal
@@ -294,15 +306,15 @@ void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) {
 
 			if (message->rank == INFINITE_RANK) { // Parent has detached from the DODAG
 				detach(&mote);
-				reset_timers(&t_timer);
+				stop_timers();
 			} else { // Update info
 				// Restart timer to delete lost parent
 				ctimer_set(&parent_timer, CLOCK_SECOND*TIMEOUT - random_rand() % (CLOCK_SECOND*5),
 					parent_callback, NULL);
 				if (update_parent(&mote, message->rank, rss)) {
-					// Rank of parent has changed, reset trickle timer
 					send_DIO(conn, &mote);
-					reset_timers(&t_timer);
+					// Rank of parent has changed, reset trickle timer
+					reset_timers();
 				}
 			}
 
@@ -310,7 +322,7 @@ void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) {
 			// DIO message received from other mote
 			uint8_t code = choose_parent(&mote, from, message->rank, rss);
 		    if (code == PARENT_NEW) {
-				reset_timers(&t_timer);
+				reset_timers();
 		    	send_DAO(&runicast, &mote);
 
 		    	// Start all timers that are used when mote is in DODAG
@@ -330,7 +342,7 @@ void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) {
 		    	// and DAO to update routing tables, then reset timers
 		    	send_DIO(conn, &mote);
 		    	send_DAO(&runicast, &mote);
-		    	reset_timers(&t_timer);
+		    	reset_timers();
 		    }
 		}
 

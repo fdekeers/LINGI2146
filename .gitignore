@@ -8,4 +8,4 @@ mote/*.cooja
 /server/.idea/
 server/__pycache__/
 /.idea/
-routing.csc
+*.csc
