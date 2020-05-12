@@ -69,7 +69,7 @@ int slope_value(int index_mote, computed_mote_t computed_motes[]) {
 }
 
 /**
- * Adds the information received from the mote and returns whether the valve should be opened or not
+ * Adds the information received from the mote and returns whether the valve should be opened or not.
  */
 int add_and_check_valve(linkaddr_t addr, computed_mote_t computed_motes[], uint16_t quality_air_value) {
 	unsigned long time = clock_seconds();

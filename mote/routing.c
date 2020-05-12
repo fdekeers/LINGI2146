@@ -347,7 +347,7 @@ void send_DATA(struct runicast_conn *conn, mote_t *mote) {
 	DATA_message_t *message = (DATA_message_t*) malloc(DATA_size);
 	message->type = DATA;
 	message->src_addr = mote->addr;
-	message->data = random_rand() % 501; // US A.Q.I. goes from 0 to 500
+	message->data = (uint16_t) (random_rand() % 501); // US A.Q.I. goes from 0 to 500
 	printf("Data = %u\n", message->data);
 
 	packetbuf_copyfrom((void*) message, DATA_size);

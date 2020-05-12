@@ -138,7 +138,8 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 	} else if (type == DATA) {
 
 		DATA_message_t* message = (DATA_message_t*) packetbuf_dataptr();
-		printf("%u/%u/%u\n", message->type, message->src_addr, message->data);
+		printf("%u/%u/%u\n", message->type, message->src_addr.u16, message->data);
+
 	} else {
 		printf("Unknown runicast message received.\n");
 	}
