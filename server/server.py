@@ -20,7 +20,7 @@ class Server:
         """
         values_list = self.values.get(packet.address, [])
 
-        if (packet.time, packet.data) == values_list[-1]:  # The data is a duplicate (due to runicast ack losses)
+        if len(values_list) > 0 and (packet.time, packet.data) == values_list[-1]:  # The data is a duplicate (due to runicast ack losses)
             return
 
         if len(values_list) >= 30:
