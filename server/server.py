@@ -20,15 +20,18 @@ class Server:
         """
         values_list = self.values.get(packet.address, [])
 
-        if len(values_list) > 0 and (packet.time, packet.data) == values_list[-1]:  # The data is a duplicate (due to runicast ack losses)
+        # Check if the data is a duplicate (due to runicast ack losses)
+        if len(values_list) > 0 and (packet.time, packet.data) == values_list[-1]:
             return
 
+        # Circular buffer, if already 30 values, remove oldest
         if len(values_list) >= 30:
             values_list = values_list[1:]
 
         values_list.append((packet.time, packet.data))
         self.values[packet.address] = values_list
 
+        # There must be at least 10 values from a node to compute a relevant slope
         if len(values_list) > 10 and self.compute_slope(packet.address) > self.threshold:
             print("Sending OPEN message to node [{node}]".format(node=packet.address))
             self.send_packet(OpenPacket(packet.address))
