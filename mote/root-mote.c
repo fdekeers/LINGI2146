@@ -120,16 +120,7 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 		if (err == MAP_NEW) { // A new child was added to the routing table
 			// Reset trickle timer and sending timer
 			reset_timers(&t_timer);
-
-			/*if (linkaddr_cmp(&child_addr, from)) {
-				// linkaddr_cmp returns non-zero if addresses are equal
-
-				// update timestamp of the child now or add the new child
-				unsigned long time = clock_seconds();
-				update_timestamp(&mote, time, child_addr);
-			}*/
-
-		} else if (err < 0) {
+		} else if (err != MAP_NEW && err != MAP_UPDATE) {
 			printf("Error adding to routing table\n");
 		}
 
@@ -174,10 +165,6 @@ void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) {
 		if (mote.in_dodag) {
 			send_DIO(conn, &mote);
 		}
-	} else if (type == DIO) {
-		//printf("DIO message received.\n");
-	} else {
-		printf("Unknown broadcast message received.\n");
 	}
 
 }
@@ -218,8 +205,6 @@ PROCESS_THREAD(root_mote, ev, data) {
 			send_callback, NULL);
 		ctimer_set(&children_timer, CLOCK_SECOND*TIMEOUT_CHILDREN,
 			children_callback, NULL);
-		/*ctimer_set(&print_timer, CLOCK_SECOND*5 + random_rand() % CLOCK_SECOND,
-			print_callback, NULL);*/
 
 		// Wait for the ctimer to trigger
 		PROCESS_YIELD();
@@ -242,8 +227,6 @@ PROCESS_THREAD(server_communication, ev, data) {
                 uint16_t dst_addr = atoi(strtok(NULL, "/"));
                 linkaddr_t addr;
                 addr.u16 = dst_addr;
-                //addr.u8[0] = (unsigned char) (dst_addr & 0xFF);
-                //addr.u8[1] = (unsigned char) (dst_addr >> 8);
                 printf("Message type %i for node %i\n", type, dst_addr);
                 send_OPEN(&runicast, addr, &mote);
             } else {
