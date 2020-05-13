@@ -230,8 +230,6 @@ uint8_t choose_parent(mote_t *mote, const linkaddr_t* parent_addr, uint8_t paren
  */
 void send_DATA(struct runicast_conn *conn, mote_t *mote) {
 
-	printf("Sending data\n");
-
 	DATA_message_t *message = (DATA_message_t*) malloc(DATA_size);
 	message->type = DATA;
 	message->src_addr = mote->addr;
