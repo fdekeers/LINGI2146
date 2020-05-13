@@ -13,7 +13,16 @@ class Server:
         self.sock.connect((self.router_ip, self.router_port))
 
     def handle_received_data(self, packet):
+        """
+        Interprets the received data packet
+        :param packet: received data packet
+        :return: None
+        """
         values_list = self.values.get(packet.address, [])
+
+        if (packet.time, packet.data) == values_list[-1]:  # The data is a duplicate (due to runicast ack losses)
+            return
+
         if len(values_list) >= 30:
             values_list = values_list[1:]
 
@@ -25,14 +34,28 @@ class Server:
             self.send_packet(OpenPacket(packet.address))
 
     def compute_slope(self, node):
+        """
+        Computes slope of the least square regression of the data sent by a node
+        :param node: node we want to compute the regression for
+        :return: the slope of the regression
+        """
         values = self.values.get(node, [])
         slope = least_squares_slope(values)
         return (int(slope * 100)) / 100
 
     def send_packet(self, packet):
+        """
+        Send a packet over the socket connection
+        :param packet: packet to send
+        :return: None
+        """
         self.sock.send(bytes(packet.encode(), "utf-8") + b"\n")
 
     def receive_packet(self):
+        """
+        Gets packets from the socket connection and triggers the handling of those
+        :return: None
+        """
         data = self.sock.recv(1)
         buf = b""
         while data.decode("utf-8") != "\n":
@@ -45,6 +68,11 @@ class Server:
 
 
 def least_squares_slope(tuples):
+    """
+    Computes the slope of the least square regression of the tapple list given as parameter
+    :param tuples: the (x, y) data
+    :return: the slope
+    """
     n = len(tuples)
     x = [t[0] for t in tuples]
     y = [t[1] for t in tuples]
@@ -64,7 +92,7 @@ if __name__ == '__main__':
     try:
         router_ip = sys.argv[1]
         router_port = int(sys.argv[2])
-    except:
+    except Exception:
         print("The server takes at least 2 parameters:")
         print("[Mandatory]\tRouter IP [string] (IPv6 address)")
         print("[Mandatory]\tRouter PORT [int] (UDP port)")
@@ -75,7 +103,7 @@ if __name__ == '__main__':
         # This threshold corresponds to the slope threshold
         threshold = sys.argv[3]
 
-    server = Server(float(threshold))
+    server = Server(int(threshold))
     i = 0
     while True:
         server.receive_packet()
