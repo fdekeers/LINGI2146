@@ -21,7 +21,7 @@ class Server:
         values_list = self.values.get(packet.address, [])
 
         # Check if the data is a duplicate (due to runicast ack losses)
-        if len(values_list) > 0 and (packet.time, packet.data) == values_list[-1]:
+        if len(values_list) > 0 and packet.data == values_list[-1][1] and packet.time - 40 < values_list[-1][0]:
             return
 
         # Circular buffer, if already 30 values, remove oldest
