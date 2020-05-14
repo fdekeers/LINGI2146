@@ -5,10 +5,6 @@
  */
 uint16_t linkaddr2uint16_t (linkaddr_t x) {
 	return x.u16;
-	/*
-	uint8_t a = x.u8[0]; uint8_t b = x.u8[1];
-	uint16_t newval = (((uint16_t) a) << b ) | ((uint16_t) a);
-	return newval; */
 }
 
 /**

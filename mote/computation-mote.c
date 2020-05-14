@@ -166,20 +166,11 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 		if (err == MAP_NEW || err == MAP_UPDATE) {
 
 			// Forward DAO message to parent
-			forward_DAO(conn, &mote, child_addr);
+			forward_DAO(conn, message, &mote);
 
 			if (err == MAP_NEW) { // A new child was added to the routing table
 				// Reset timers
-				printf("New child added\n");
 				reset_timers();
-
-				/*if (linkaddr_cmp(&child_addr, from)) {
-					// linkaddr_cmp returns non-zero if addresses are equal
-
-					// update timestamp of the child now or add the new child
-					unsigned long time = clock_seconds();
-					update_timestamp(&mote, time, child_addr);
-				}*/
 			}
 			
 		} else {
@@ -219,7 +210,7 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
  * Callback function, called when an unicast packet is sent
  */
 void runicast_sent(struct runicast_conn *c, const linkaddr_t *to, uint8_t retransmissions) {
-
+	// Nothing to do
 }
 
 /**
@@ -251,15 +242,12 @@ void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) {
 
 	if (type == DIS) { // DIS message received
 		
-		//printf("DIS packet received.\n");
 		// If the mote is already in a DODAG, send DIO packet
 		if (mote.in_dodag) {
 			send_DIO(conn, &mote);
 		}
 
 	} else if (type == DIO) { // DIO message received
-
-		//printf("DIO message received from %u.%u\n", from->u8[0], from->u8[1]);
 
 		DIO_message_t* message = (DIO_message_t*) packetbuf_dataptr();
 		if (linkaddr_cmp(from, &(mote.parent->addr))) { // DIO message received from parent

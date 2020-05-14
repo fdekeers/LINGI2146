@@ -169,8 +169,8 @@ void data_callback(void *ptr) {
 	}
 
 	// Restart the timer with a new random value
-	ctimer_set(&data_timer, CLOCK_SECOND*DATA_PERIOD - 5 + random_rand() % (CLOCK_SECOND*10),
-			data_callback, NULL);
+	ctimer_set(&data_timer, CLOCK_SECOND*(DATA_PERIOD-5) + (random_rand() % (CLOCK_SECOND*10)),
+		data_callback, NULL);
 }
 
 /**
@@ -207,20 +207,11 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 		if (err == MAP_NEW || err == MAP_UPDATE) {
 
 			// Forward DAO message to parent
-			forward_DAO(conn, &mote, child_addr);
+			forward_DAO(conn, message, &mote);
 
 			if (err == MAP_NEW) { // A new child was added to the routing table
 				// Reset timers
-				printf("New child added\n");
 				reset_timers();
-
-				/*if (linkaddr_cmp(&child_addr, from)) {
-					// linkaddr_cmp returns non-zero if addresses are equal
-
-					// update timestamp of the child now or add the new child
-					unsigned long time = clock_seconds();
-					update_timestamp(&mote, time, child_addr);
-				}*/
 			}
 
 		} else {
@@ -236,12 +227,12 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 		// OPEN packet, forward towards destination
 		OPEN_message_t* message = (OPEN_message_t*) packetbuf_dataptr();
 		linkaddr_t dst_addr = message->dst_addr;
-		if (linkaddr_cmp(&dst_addr, &(mote.addr))) {
+		if (linkaddr_cmp(&dst_addr, &(mote.addr))) { // This is the concerned mote
 			// Open valve : turn on green LED
 			leds_on(LEDS_GREEN);
 			// Set timer to turn off green LED after 10 min
 			ctimer_set(&open_timer, CLOCK_SECOND*OPEN_TIME, open_callback, NULL);
-		} else {
+		} else { // This is not the concerned mote
 			forward_OPEN(conn, message, &mote);
 		}
 
@@ -255,7 +246,7 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
  * Callback function, called when an unicast packet is sent
  */
 void runicast_sent(struct runicast_conn *c, const linkaddr_t *to, uint8_t retransmissions) {
-
+	// Nothing to do
 }
 
 /**
@@ -287,15 +278,12 @@ void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) {
 
 	if (type == DIS) { // DIS message received
 
-		//printf("DIS packet received.\n");
 		// If the mote is already in a DODAG, send DIO packet
 		if (mote.in_dodag) {
 			send_DIO(conn, &mote);
 		}
 
 	} else if (type == DIO) { // DIO message received
-
-		//printf("DIO message received from %u.%u\n", from->u8[0], from->u8[1]);
 
 		DIO_message_t* message = (DIO_message_t*) packetbuf_dataptr();
 		if (linkaddr_cmp(from, &(mote.parent->addr))) { // DIO message received from parent
@@ -330,7 +318,7 @@ void broadcast_recv(struct broadcast_conn *conn, const linkaddr_t *from) {
 					parent_callback, NULL);
 				ctimer_set(&children_timer, CLOCK_SECOND*TIMEOUT_CHILDREN,
 					children_callback, NULL);
-				ctimer_set(&data_timer, CLOCK_SECOND*DATA_PERIOD - 5 + random_rand() % (CLOCK_SECOND*10),
+				ctimer_set(&data_timer, CLOCK_SECOND*(DATA_PERIOD-5) + (random_rand() % (CLOCK_SECOND*10)),
 					data_callback, NULL);
 
 		    } else if (code == PARENT_CHANGED) {
@@ -382,9 +370,6 @@ PROCESS_THREAD(sensor_mote, ev, data) {
 		// Start the sending timer
 		ctimer_set(&send_timer, trickle_random(&t_timer),
 			send_callback, NULL);
-
-		/*ctimer_set(&print_timer, CLOCK_SECOND*5 + random_rand() % CLOCK_SECOND,
-			print_callback, NULL);*/
 
 		// Wait for the ctimers to trigger
 		PROCESS_YIELD();

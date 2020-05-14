@@ -43,11 +43,8 @@ void init_mote(mote_t *mote) {
 	// Initialize routing table
 	mote->routing_table = hashmap_new();
 
-	// Initialize buffer of children
-	mote->children = malloc(MAX_NB_CHILDREN*sizeof(child_mote_t));
-
-	if (!mote->routing_table || !mote->children) {
-		printf("init_mote() : could not allocate enough memory\n");
+	if (!mote->routing_table) {
+		printf("init_mote() of mote with address %u.%u : could not allocate enough memory\n", (mote->addr).u8[0], (mote->addr).u8[1]);
 		exit(-1);
 	}
 
@@ -67,11 +64,8 @@ void init_root(mote_t *mote) {
 	// Initialize routing table
 	mote->routing_table = hashmap_new();
 
-	// Initialize buffer of children
-	mote->children = malloc(MAX_NB_CHILDREN*sizeof(child_mote_t));
-
-	if (!mote->routing_table || !mote->children) {
-		printf("init_mote() of mote with address %u.%u : could not allocate enough memory\n", (mote->addr).u8[0], (mote->addr).u8[1]);
+	if (!mote->routing_table) {
+		printf("init_root() of mote with address %u.%u : could not allocate enough memory\n", (mote->addr).u8[0], (mote->addr).u8[1]);
 		exit(-1);
 	}
 
@@ -156,7 +150,6 @@ void send_DIS(struct broadcast_conn *conn) {
 	packetbuf_copyfrom((void*) message, DIS_size);
 	free(message);
 	broadcast_send(conn);
-	//printf("DIS packet broadcasted.\n");
 
 }
 
@@ -174,7 +167,6 @@ void send_DIO(struct broadcast_conn *conn, mote_t *mote) {
 	packetbuf_copyfrom((void*) message, DIO_size);
 	free(message);
 	broadcast_send(conn);
-	//printf("DIO packet broadcasted, rank = %u\n", rank);
 
 }
 
@@ -183,47 +175,23 @@ void send_DIO(struct broadcast_conn *conn, mote_t *mote) {
  */
 void send_DAO(struct runicast_conn *conn, mote_t *mote) {
 
-	if (mote->parent == NULL) {
-		//printf("Root mote. DAO not forwarded.\n");
-	} else {
+	DAO_message_t *message = (DAO_message_t*) malloc(DAO_size);
+	message->type = DAO;
+	message->src_addr = mote->addr;
 
-		DAO_message_t *message = (DAO_message_t*) malloc(DAO_size);
-		message->type = DAO;
-		message->src_addr = mote->addr;
+	packetbuf_copyfrom((void*) message, DAO_size);
+	free(message);
 
-		packetbuf_copyfrom((void*) message, DAO_size);
-		free(message);
-
-		runicast_send(conn, &(mote->parent->addr), MAX_RETRANSMISSIONS);
-		/*printf("DAO packet sent to parent at addr %u.%u\n",
-			mote->parent->addr.u8[0], mote->parent->addr.u8[1]);*/
-
-	}
+	runicast_send(conn, &(mote->parent->addr), MAX_RETRANSMISSIONS);
 
 }
 
 /**
- * Forwards a DAO message, with source address child_addr, to the parent of this node.
+ * Forwards a DAO message, to the parent of this node.
  */
-void forward_DAO(struct runicast_conn *conn, mote_t *mote, linkaddr_t child_addr) {
-
-	if (mote->parent == NULL) {
-		//printf("Root mote. DAO not forwarded.\n");
-	} else {
-
-		DAO_message_t *message = (DAO_message_t*) malloc(DAO_size);
-		message->type = DAO;
-		message->src_addr = child_addr;
-
-		packetbuf_copyfrom((void*) message, DAO_size);
-		free(message);
-		
-		runicast_send(conn, &(mote->parent->addr), MAX_RETRANSMISSIONS);
-		/*printf("DAO packet forwarded to parent at addr %u.%u\n",
-			mote->parent->addr.u8[0], mote->parent->addr.u8[1]);*/
-
-	}
-
+void forward_DAO(struct runicast_conn *conn, DAO_message_t *message, mote_t *mote) {
+	packetbuf_copyfrom((void*) message, DAO_size);
+	runicast_send(conn, &(mote->parent->addr), MAX_RETRANSMISSIONS);
 }
 
 /**
@@ -246,18 +214,13 @@ uint8_t choose_parent(mote_t *mote, const linkaddr_t* parent_addr, uint8_t paren
 	if (!mote->in_dodag) {
 		// Mote not in DODAG yet, initialize parent
 		init_parent(mote, parent_addr, parent_rank, rss);
-		/*printf("Parent set : Addr = %u.%u; Rank = %u\n",
-			mote->parent->addr.u8[0], mote->parent->addr.u8[1], mote->parent->rank);*/
 		return PARENT_NEW;
 	} else if (is_better_parent(mote, parent_rank, rss)) {
 		// Better parent found, change parent
 		change_parent(mote, parent_addr, parent_rank, rss);
-		/*printf("Parent changed to : Addr = %u.%u; Rank = %u\n",
-			mote->parent->addr.u8[0], mote->parent->addr.u8[1], mote->parent->rank);*/
 		return PARENT_CHANGED;
 	} else {
 		// Already has a better parent
-		//printf("Already has a better parent !\n");
 		return PARENT_NOT_CHANGED;
 	}
 }
@@ -266,21 +229,16 @@ uint8_t choose_parent(mote_t *mote, const linkaddr_t* parent_addr, uint8_t paren
  * Sends a DATA message, containing a random value, to the parent of the mote.
  */
 void send_DATA(struct runicast_conn *conn, mote_t *mote) {
+
 	DATA_message_t *message = (DATA_message_t*) malloc(DATA_size);
 	message->type = DATA;
 	message->src_addr = mote->addr;
 	message->data = (uint16_t) (random_rand() % 501); // US A.Q.I. goes from 0 to 500
-	printf("Data = %u\n", message->data);
 
 	packetbuf_copyfrom((void*) message, DATA_size);
 	free(message);
 
-	printf("Parent address = %d.%d\n",
-		mote->parent->addr.u8[0], mote->parent->addr.u8[1]);
 	runicast_send(conn, &(mote->parent->addr), MAX_RETRANSMISSIONS);
-	/*printf("DATA packet sent to parent at addr %u.%u\n",
-		mote->parent->addr.u8[0], mote->parent->addr.u8[1]);*/
-
 }
 
 /**
