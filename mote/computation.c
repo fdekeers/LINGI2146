@@ -81,6 +81,11 @@ int add_and_check_valve(linkaddr_t addr, computed_mote_t computed_motes[], uint1
 	uint8_t enough_values = 0; // false
 	computed_mote_t *elem = &(computed_motes[index_mote]);
 	if (elem->in_use) {
+		if ((elem->values)[(elem->first_free_value_index+MAX_NB_VALUES-1)%MAX_NB_VALUES] == quality_air_value && time - elem->timestamp < 15) {
+			// we just received a duplicate data ! (same data + delta time < 15 sec)
+			elem->timestamp = time;
+			return CLOSE_VALVE; // do not take any action
+		}
 		if (elem->first_value_index == elem->first_free_value_index) {
 			// buffer is full
 			enough_values = 1;
@@ -100,7 +105,7 @@ int add_and_check_valve(linkaddr_t addr, computed_mote_t computed_motes[], uint1
 
 	printf("Added mote %u.%u in the computation buffer\n", addr.u8[0], addr.u8[1]);
 
-	if (((elem->first_free_value_index+MAX_NB_VALUES) - elem->first_value_index) % MAX_NB_VALUES > MIN_NB_VALUES_COMPUTE) {
+	if (((elem->first_free_value_index+MAX_NB_VALUES) - elem->first_value_index) % MAX_NB_VALUES >= MIN_NB_VALUES_COMPUTE) {
 		// enough values to compute whether we should open the valve
 		enough_values = 1;
 	}
