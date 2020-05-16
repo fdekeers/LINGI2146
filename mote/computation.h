@@ -17,6 +17,7 @@
 #define MAX_NB_VALUES 30 // maximum number of values about the mote
 #define MAX_NB_COMPUTED 5 // this node can compute the needed values for only this number of nodes
 #define SLOPE_THRESHOLD 0 // definition of the threshold (in %) for which we should open valves to improve air quality
+#define TIMEOUT_DATA 300 // this timeout is used to know when we should erase data from a node from which we haven't received any DATA message for TIMEOUT_DATA seconds
 
 
 
