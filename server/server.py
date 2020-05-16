@@ -6,6 +6,7 @@ import sys
 class Server:
     def __init__(self, threshold=5, router_ip="127.0.0.1", router_port=60001):
         self.values = {}
+        self.last_received = {}
         self.threshold = threshold
         self.router_ip = router_ip
         self.router_port = router_port
@@ -19,6 +20,8 @@ class Server:
         :return: None
         """
         values_list = self.values.get(packet.address, [])
+
+        self.last_received[packet.address] = packet.time
 
         # Check if the data is a duplicate (due to runicast ack losses)
         if len(values_list) > 0 and packet.data == values_list[-1][1] and packet.time - 15 < values_list[-1][0]:
@@ -68,6 +71,17 @@ class Server:
         if packet is not None:
             print("Received data: \tADDR = {}\tDATA = {}\tTIME = {}".format(packet.address, packet.data, packet.time))
             self.handle_received_data(packet)
+            self.clear_timed_out_motes()
+
+    def clear_timed_out_motes(self):
+        """
+        Removes the nodes that did not send any data for 30 minutes
+        """
+        for mote, last_time in self.last_received.items():
+            if last_time < time.time() - 30*60:
+                if mote in self.values:
+                    del self.values[mote]
+                del self.last_received[mote]
 
 
 def least_squares_slope(tuples):
