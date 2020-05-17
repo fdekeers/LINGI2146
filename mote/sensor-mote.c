@@ -240,7 +240,7 @@ void runicast_sent(struct runicast_conn *c, const linkaddr_t *to, uint8_t retran
  * Callback function, called when an unicast packet has timed out
  */
 void runicast_timeout(struct runicast_conn *c, const linkaddr_t *to, uint8_t retransmissions) {
-	printf("Runicast packet timed out.\n");
+	// Nothing to do
 }
 
 // Runicast callback functions

@@ -184,6 +184,7 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 		int ret = add_and_check_valve(message->src_addr, computed_motes, message->data);
 		if (ret == OPEN_VALVE) {
 			// Send OPEN message to mote
+			printf("CM : OPEN message to mote %u.%u\n", message->src_addr.u8[0], message->src_addr.u8[1]);
 			send_OPEN(conn, message->src_addr, &mote);
 		} else if (ret == CANNOT_ADD_MOTE) {
 			// No room to add child, forward towards root
@@ -217,7 +218,7 @@ void runicast_sent(struct runicast_conn *c, const linkaddr_t *to, uint8_t retran
  * Callback function, called when an unicast packet has timed out
  */
 void runicast_timeout(struct runicast_conn *c, const linkaddr_t *to, uint8_t retransmissions) {
-	printf("Runicast packet timed out.\n");
+	// Nothing to do
 }
 
 // Runicast callback functions

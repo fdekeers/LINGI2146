@@ -123,12 +123,18 @@ void runicast_recv(struct runicast_conn *conn, const linkaddr_t *from, uint8_t s
 
 }
 
+/**
+ * Callback function, called when an unicast packet is sent
+ */
 void runicast_sent(struct runicast_conn *c, const linkaddr_t *to, uint8_t retransmissions) {
-
+	// Nothing to do
 }
 
+/**
+ * Callback function, called when an unicast packet has timed out
+ */
 void runicast_timeout(struct runicast_conn *c, const linkaddr_t *to, uint8_t retransmissions) {
-
+	// Nothing to do
 }
 
 const struct runicast_callbacks runicast_callbacks = {runicast_recv, runicast_sent, runicast_timeout};
@@ -214,7 +220,7 @@ PROCESS_THREAD(server_communication, ev, data) {
                 uint16_t dst_addr = atoi(strtok(NULL, "/"));
                 linkaddr_t addr;
                 addr.u16 = dst_addr;
-                printf("Message type %i for node %i\n", type, dst_addr);
+                printf("OPEN message to mote %u.%u\n", addr.u8[0], addr.u8[1]);
                 send_OPEN(&runicast, addr, &mote);
             } else {
                 printf("Unexpected message from server\n");

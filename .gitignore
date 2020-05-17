@@ -8,4 +8,3 @@ mote/*.cooja
 /server/.idea/
 server/__pycache__/
 /.idea/
-*.csc

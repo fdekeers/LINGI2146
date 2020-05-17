@@ -103,7 +103,7 @@ int add_and_check_valve(linkaddr_t addr, computed_mote_t computed_motes[], uint1
 	(elem->values)[elem->first_free_value_index] = quality_air_value;
 	elem->first_free_value_index = (elem->first_free_value_index + 1) % MAX_NB_VALUES;
 
-	printf("Added mote %u.%u in the computation buffer\n", addr.u8[0], addr.u8[1]);
+	printf("CM : mote %u.%u, value %u\n", addr.u8[0], addr.u8[1], quality_air_value);
 
 	if (((elem->first_free_value_index+MAX_NB_VALUES) - elem->first_value_index) % MAX_NB_VALUES >= MIN_NB_VALUES_COMPUTE) {
 		// enough values to compute whether we should open the valve
