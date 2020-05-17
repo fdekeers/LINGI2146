@@ -5,7 +5,7 @@ This repository contains our files for the simulation of a air quality sensor ne
 # Project structure
 Let us describe the different important files contained in the two folders of this repository :
 
-- [`mote`](mote) : source code of the different types of mote (sensor, computation, and border router)
+- [`mote`](mote) : contains the source code of the different types of motes (sensor, computation, and border router/root mote)
   - [`routing.c`](mote/routing.c) : this file contains the routing functions that are helpful for the different nodes, regardless of their type (initialize the (potentially root) mote, choose/change/update parent, detach from the tree, send/forward the different types of messages);
   - [`root-mote.c`](mote/root-mote.c) : this contains what is specific to the root-mote (or what is handled in a different way than the other types of motes) such as the communication with the python server and the handling of the different types of messages;
   - [`sensor-mote.c`](mote/sensor-mote.c) : this contains the specific handling of the different types of messages (to enter the tree/exit the tree) and the different timers needed for the children and the parents;
@@ -14,7 +14,7 @@ Let us describe the different important files contained in the two folders of th
   - [`hashmap.c`](mote/hashmap.c) : this contains the code of the linear-probing hashmap we adapted from an open-sourced implementation of a generic hashmap. This is used by the different motes as their routing table;
   - [`trickle-timer.c`](mote/trickle-timer.c) : this contains the implementation of the exponential backoff we saw during the courses, this is useful for every mote;
   - [`protocol.txt`](mote/protocol.txt) : this file contains different informations about how the motes send/handle the receiving of the DIS, DIO and DAO messages in our network.
-- [`server`](server) : source code of the Python server
+- [`server`](server) : folder containing the Python files needed to run the server
   - [`Packet.py`](server/Packet.py) : this python file contains classes and functions to encode the packets to send and decode the different packets received;
   - [`server.py`](server/server.py) : this is the source code of the Python server, it handles the received data, makes the needed computations and can also send OPEN packets to the different motes by sending a message to the root-mote.
 
