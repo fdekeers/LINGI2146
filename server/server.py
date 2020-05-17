@@ -105,7 +105,7 @@ def least_squares_slope(tuples):
 
 
 if __name__ == '__main__':
-    threshold = 5
+    threshold = 20
     try:
         router_ip = sys.argv[1]
         router_port = int(sys.argv[2])

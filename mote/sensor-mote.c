@@ -53,9 +53,6 @@ struct ctimer parent_timer;
 // Callback timer to delete unresponsive children
 struct ctimer children_timer;
 
-// Callback timer to print routing table
-struct ctimer print_timer;
-
 // Callback timer to send data
 struct ctimer data_timer;
 
@@ -147,16 +144,6 @@ void children_callback(void *ptr) {
 		reset_timers();
 	}
 
-}
-
-/**
- * Callback function that will print the routing table.
- */
-void print_callback(void *ptr) {
-	// Reset the timer
-	ctimer_reset(&print_timer);
-	// Print the routing table
-	hashmap_print(mote.routing_table);
 }
 
 /**
