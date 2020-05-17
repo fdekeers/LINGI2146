@@ -3,7 +3,7 @@
 This repository contains our files for the simulation of a air quality sensor network.
 
 # Project structure
-mote : source code of the different types of mote (sensor, computation, and border router)
+mote : source code of the different types of mote (sensor, computation, and border router)\
 server : source code of the Python server
 
 
