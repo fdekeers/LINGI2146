@@ -253,8 +253,6 @@ int hashmap_get_int(hashmap_map *m, uint16_t key, linkaddr_t *arg) {
 		curr = (curr + 1) % m->table_size;
 	}
 
-	//*arg = NULL;
-
 	/* Not found */
 	return MAP_MISSING;
 }
@@ -285,8 +283,6 @@ int hashmap_remove_int(hashmap_map *m, uint16_t key) {
             if (m->data[curr].key == key) {
                 /* Blank out the fields */
                 m->data[curr].in_use = 0;
-                //m->data[curr].data = NULL;
-                //m->data[curr].key = NULL;
 
                 /* Reduce the size */
                 m->size--;
