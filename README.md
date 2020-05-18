@@ -45,7 +45,7 @@ Other constants in these files define return values, and should not be changed.
 # Simulation
 A Cooja simulation file, [`simulation.csc`](simulation.csc), is given. The simulation already contains the 3 types of motes.\
 To run the simulation :
-- Place the folder containing this repository in the folder that also contains the `contiki` folder. On the InstantContiki VM, simply place it in the home folder. The directory structure should look like this :
+- Place the folder containing this repository in the folder that also contains the `contiki` folder. On the InstantContiki VM, simply place it in the Home folder. The directory structure should look like this :
 ```
 $HOME
   |--contiki
