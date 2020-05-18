@@ -5,6 +5,7 @@ mote/*.a
 mote/*.map
 mote/*.z1
 mote/*.cooja
-/server/.idea/
+mote/symbols.*
+server/.idea/
 server/__pycache__/
 /.idea/

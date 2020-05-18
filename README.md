@@ -25,6 +25,7 @@ Multiple constants are defined to make our implementation work. Let us list here
   - `TIMEOUT_PARENT` : timeout value, in seconds, to detach from parent, if the parent has not sent a message during this time;
 - [`mote/hashmap.h`](mote/hashmap.h) :
   - `TIMEOUT_CHILDREN` : timeout value, in seconds, after which we should erase a child from the hashmap;
+  - `DEBUG_MODE` : turns on debug messages if set to 1;
 - [`mote/trickle-timer.h`](mote/trickle-timer.h) : constants related to the trickle timer
   - `T_MIN` : minimum value for T;
   - `T_MAX` : maximum value for T;

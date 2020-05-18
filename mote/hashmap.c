@@ -179,7 +179,7 @@ hashmap_map * hashmap_new() {
  * 		  MAP_UPDATE if an element was updated.
  */
 int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value, unsigned long time, uint8_t isRehashing) {
-	//printf("Trying to put node %u. Rehashing : %d\n", key, isRehashing);
+	if (DEBUG_MODE) printf("Trying to put node %u. Rehashing : %d\n", key, isRehashing);
 	if (!isRehashing && DEBUG_MODE) {
 		hashmap_print(m);
 	}
@@ -210,7 +210,7 @@ int hashmap_put_int(hashmap_map *m, uint16_t key, linkaddr_t value, unsigned lon
 	m->data[index].data = value;
 	m->data[index].time = time;
 	m->data[index].key = key;
-	//printf("Node with key %u added\n",key);
+	if (DEBUG_MODE) printf("Node with key %u added\n",key);
 
 	return ret;
 
@@ -290,14 +290,14 @@ int hashmap_remove_int(hashmap_map *m, uint16_t key) {
 
                 /* Reduce the size */
                 m->size--;
-		printf("Node with key %u was removed from hashmap\n",key);
+		if (DEBUG_MODE) printf("Node with key %u was removed from hashmap\n",key);
                 return MAP_OK;
             }
 		}
 		curr = (curr + 1) % m->table_size;
 	}
 
-	printf("Error : element with key addr %u could not be found and thus wasn't removed\n", key);
+	if (DEBUG_MODE) printf("Error : element with key addr %u could not be found and thus wasn't removed\n", key);
 	/* Data not found */
 	return MAP_MISSING;
 }
