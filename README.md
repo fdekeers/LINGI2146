@@ -48,8 +48,8 @@ To run the simulation :
 - Place the folder containing this repository in the folder that also contains the `contiki` folder. On the InstantContiki VM, simply place it in the home folder. The directory structure should look like this :
 ```
 $HOME
-  |---contiki
-  |---LINGI2146  
+  |--contiki
+  |--LINGI2146  
 ```
 - Check that the serial socket (server) of the root mote is activated
 - Run the python server :
