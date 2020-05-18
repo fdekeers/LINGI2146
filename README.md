@@ -18,7 +18,7 @@ Let us describe the different important files contained in the two folders of th
   - [`server.py`](server/server.py) : this is the source code of the Python server, it handles the received data, makes the needed computations and can also send OPEN packets to the different motes by sending a message to the root-mote.
 
 # Definition of the different constants
-Multiple constants are defined to make our implementation work. Let us list here the header files that contain the constants you might want to change to suit your needs :
+Several constants are defined to make our implementation work. Let us list here the header files that contain the constants you might want to change to suit your needs :
 - [`mote/routing.h`](mote/routing.h) : general constants needed for the routing
   - `RSS_THRESHOLD` : signal strength threshold, in dB, for a mote to change parent to one with a better signal strength;
   - `MAX_RETRANSMISSIONS` : maximum number of retransmissions for reliable unicast transport;
